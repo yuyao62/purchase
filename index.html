@@ -1,4 +1,4 @@
-<!doctype html>
+ㄩ<!doctype html>
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
@@ -166,7 +166,7 @@
         <th>廠商</th>
         <th>藥代</th>
         <th>藥品名稱</th>
-        <th>累計用量</th>
+        <th>月用量</th>
         <th>庫存量（輸入）</th>
         <th>狀態</th>
       </tr>
@@ -208,7 +208,7 @@
         廠商: x["廠商"],
         藥代: x["藥代"],
         藥品: x["藥品"],
-        累計用量: Number(x["累計用量"]),
+        累計用量: Number(x["月用量"]),
         庫存量: null,
         需採購: false
       }));
@@ -284,7 +284,7 @@
         <td>${item.廠商}</td>
         <td>${item.藥代}</td>
         <td>${item.藥品}</td>
-        <td>${item.累計用量}</td>
+        <td>${item.月用量}</td>
         <td><input type="number" min="0" style="width:100%;" value="${item.庫存量 ?? ""}" placeholder="輸入"></td>
         <td class="status-cell"></td>
       `;
@@ -293,7 +293,7 @@
       input.addEventListener("input", () => {
         const v = input.value === "" ? null : Number(input.value);
         item.庫存量 = v;
-        item.需採購 = (v != null) && (item.累計用量 > v);
+        item.需採購 = (v != null) && (item.月用量 > v);
         updateRowStatus(tr, item);
 
         // 只更新統計 & 圖表，不重畫整張表，避免輸入被中斷
