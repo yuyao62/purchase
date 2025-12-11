@@ -134,10 +134,26 @@
 
   <!-- 操作列 -->
   <div class="row">
-    <label>廠商（前兩碼）：</label>
-    <select id="vendorSelect">
-      <option value="">全部</option>
-    </select>
+  <label>廠商（前兩碼）：</label>
+  <select id="vendorSelect">
+    <option value="">全部</option>
+  </select>
+
+  <label>搜尋：</label>
+  <input id="searchInput" type="text" placeholder="輸入藥代或品名">
+
+  <button id="searchBtn">查詢</button>
+  <button id="resetBtn">重置</button>
+
+  <!-- 🔥 新增緊急按鈕 -->
+  <button id="emergencyBtn" style="background:#dc2626;">緊急</button>
+
+  <label style="margin-left:auto;">
+    <input type="checkbox" id="needBuyOnly">
+    只顯示需採購
+  </label>
+</div>
+
 
     <label>搜尋：</label>
     <input id="searchInput" type="text" placeholder="輸入藥代或品名">
