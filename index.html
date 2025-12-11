@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>藥品盤點系統</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>🏭 藥品盤點系統</h1>
+  <div id="vendors"></div>
+  <h2 id="vendor-title"></h2>
+  <table>
+    <thead>
+      <tr>
+        <th>藥品名稱</th>
+        <th>累計用量</th>
+        <th>庫存</th>
+        <th>狀態</th>
+      </tr>
+    </thead>
+    <tbody id="result"></tbody>
+  </table>
+  <button onclick="downloadCSV()">📥 下載結果</button>
+  <script src="app.js"></script>
+</body>
+</html>
