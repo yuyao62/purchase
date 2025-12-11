@@ -187,6 +187,28 @@
   let chartInstance = null;
 
   /* ===============================
+     相同品項合併：
+     同一個「廠商 + 藥代 + 藥品」視為同一品項，
+     月用量累加。
+  =============================== */
+  function mergeSameItems(list) {
+    const merged = {};
+
+    list.forEach(item => {
+      const key = `${item.廠商}__${item.藥代}__${item.藥品}`;
+
+      if (!merged[key]) {
+        merged[key] = { ...item };
+        merged[key].月用量 = Number(item.月用量) || 0;
+      } else {
+        merged[key].月用量 += Number(item.月用量) || 0;
+      }
+    });
+
+    return Object.values(merged);
+  }
+
+  /* ===============================
      廠商前兩碼處理
   =============================== */
   function vendorPrefix(name) {
@@ -203,7 +225,7 @@
       const resp = await fetch("inventory.json");
       const data = await resp.json();
 
-      rawData = data.map((x, idx) => ({
+      const mapped = data.map((x, idx) => ({
         id: idx,
         廠商: x["廠商"],
         藥代: x["藥代"],
@@ -212,6 +234,9 @@
         庫存量: null,
         需採購: false
       }));
+
+      // 🔥 在這裡進行「相同品項合併」
+      rawData = mergeSameItems(mapped);
 
       populateVendors();
       applyFilter();   // 初次渲染
