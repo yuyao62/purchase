@@ -1,100 +1,67 @@
-import pandas as pd
+mport os
 import json
-import os
-import sys
-import re
+import pandas as pd
 
-# 欄位對應表：原始欄位名稱 → 標準欄位名稱
-COLUMN_MAP = {
-    "藥代": "藥品代碼",
-    "藥代碼": "藥品代碼",
-    "代碼": "藥品代碼",
-    "code": "藥品代碼",
+# 你的 Excel 資料夾（你提供的路徑）
+FOLDER_PATH = r"D:\User\Desktop\purchase"
 
-    "藥品": "藥品名稱",
-    "品名": "藥品名稱",
-    "name": "藥品名稱",
+# 輸出 JSON 檔案名稱
+OUTPUT_JSON = "merged.json"
 
-    "廠商": "廠商",
-    "供應商": "廠商",
-    "製造商": "廠商",
-    "小廠": "廠商",
-    "vendor": "廠商",
 
-    "累計數量": "盤點數量",
-    "數量": "盤點數量",
-    "qty": "盤點數量"
-}
+def read_all_excels(folder_path):
+    # 檢查資料夾是否存在
+    if not os.path.exists(folder_path):
+        print("❌ 路徑不存在：", folder_path)
+        return []
 
-def normalize_columns(df):
-    """將欄位名稱標準化"""
-    new_columns = {}
-    for col in df.columns:
-        col_clean = str(col).strip()
-        new_columns[col] = COLUMN_MAP.get(col_clean, col_clean)
-    return df.rename(columns=new_columns)
+    # 找所有 Excel 檔案
+    excel_files = [
+        f for f in os.listdir(folder_path)
+        if f.lower().endswith(".xlsx") or f.lower().endswith(".xls")
+    ]
 
-def extract_date_from_filename(filename):
-    """從檔名中提取日期（格式：YYYYMMDD → YYYY-MM-DD）"""
-    match = re.search(r"(\d{8})", filename)
-    if match:
-        raw = match.group(1)
-        return f"{raw[:4]}-{raw[4:6]}-{raw[6:]}"
-    return None
+    if not excel_files:
+        print("❌ 沒找到任何 Excel (.xlsx/.xls)")
+        return []
 
-def fill_missing_vendor(df, default_vendor="未填廠商"):
-    """補上缺漏或空白的廠商欄位"""
-    if "廠商" not in df.columns:
-        df["廠商"] = default_vendor
-    else:
-        df["廠商"] = df["廠商"].fillna(default_vendor)
-        df.loc[df["廠商"].astype(str).str.strip() == "", "廠商"] = default_vendor
-    return df
+    print("📄 找到 Excel：", excel_files)
 
-def add_inventory_date(df, date_str):
-    """加入盤點日期欄位"""
-    if date_str:
-        df["盤點日期"] = date_str
-    return df
+    data = []
 
-def excel_to_json(excel_file, output_file=None):
-    # 讀取 Excel
-    df = pd.read_excel(excel_file)
+    for filename in excel_files:
+        file_path = os.path.join(folder_path, filename)
+        print(f"📂 讀取：{file_path}")
 
-    # 標準化欄位名稱
-    df = normalize_columns(df)
+        try:
+            xls = pd.ExcelFile(file_path)  # 讀全部 sheet
+        except Exception as e:
+            print("⚠ 無法讀取：", file_path)
+            print("原因：", e)
+            continue
 
-    # 補上廠商欄位
-    df = fill_missing_vendor(df)
+        for sheet in xls.sheet_names:
+            df = pd.read_excel(file_path, sheet_name=sheet)
+            data.append({
+                "file": filename,
+                "sheet": sheet,
+                "rows": df.to_dict(orient="records")
+            })
 
-    # 從檔名提取日期並加入盤點日期欄位
-    date_str = extract_date_from_filename(excel_file)
-    df = add_inventory_date(df, date_str)
+    return data
 
-    # 轉成 JSON
-    records = df.to_dict(orient="records")
 
-    # 設定輸出檔名
-    if output_file is None:
-        base = os.path.splitext(excel_file)[0]
-        output_file = base + ".json"
+def main():
+    all_data = read_all_excels(FOLDER_PATH)
+    if not all_data:
+        return  # 沒讀到資料則停止
 
-    # 寫入 JSON 檔案
-    with open(output_file, "w", encoding="utf-8") as f:
-        json.dump(records, f, ensure_ascii=False, indent=2)
+    with open(OUTPUT_JSON, "w", encoding="utf-8") as f:
+        json.dump(all_data, f, ensure_ascii=False, indent=2)
 
-    print(f"✅ 已轉換完成：{output_file}")
+    print("\n✔ 完成！已輸出：", OUTPUT_JSON)
+
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("❗ 用法：python excel_to_json.py <Excel檔案路徑> [輸出檔名]")
-    else:
-        excel_file = sys.argv[1]
-        output_file = sys.argv[2] if len(sys.argv) > 2 else None
-        excel_to_json(excel_file, output_file)
+    main()
 
-        print("❗ 用法：python excel_to_json.py <Excel檔案路徑> [輸出檔名]")
-    else:
-        excel_file = sys.argv[1]
-        output_file = sys.argv[2] if len(sys.argv) > 2 else None
-        excel_to_json(excel_file, output_file)
