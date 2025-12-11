@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <title>盤點查詢器</title>
   <link rel="stylesheet" href="style.css">
+  <!-- 引入 Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <h1>盤點查詢器</h1>
@@ -53,9 +55,10 @@
     <p>總盤點藥品數：<span id="totalCount">0</span></p>
     <p>缺貨品項數：<span id="outOfStockCount">0</span></p>
     <p>缺貨比例：<span id="outOfStockRate">0%</span></p>
-    <canvas id="chart"></canvas>
+    <canvas id="chart" width="400" height="400"></canvas>
   </div>
 
+  <!-- 引入查詢邏輯 -->
   <script src="app.js"></script>
 </body>
 </html>
