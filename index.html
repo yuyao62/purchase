@@ -10,13 +10,26 @@
 <body>
   <h1>盤點查詢器</h1>
 
-  <!-- 查詢區 -->
-  <div class="search-section">
-    <label for="searchInput">輸入藥品名稱或代碼：</label>
-    <input type="text" id="searchInput" placeholder="輸入後按 Enter 或『查詢』">
-    <button onclick="searchDrug()">查詢</button>
-    <button onclick="resetSearch()">重置</button>
-  </div>
+ <!-- 廠商選擇區 -->
+<div class="vendor-section">
+  <label for="vendorSelect">選擇廠商：</label>
+  <select id="vendorSelect">
+    <option value="">請選擇</option>
+    <option value="台灣大藥廠">台灣大藥廠</option>
+    <option value="信東製藥">信東製藥</option>
+    <option value="永信藥品">永信藥品</option>
+    <!-- 可動態載入更多廠商 -->
+  </select>
+</div>
+
+<!-- 查詢區 -->
+<div class="search-section">
+  <label for="searchInput">輸入藥品名稱或代碼：</label>
+  <input type="text" id="searchInput" placeholder="輸入後按 Enter 或『查詢』">
+  <button onclick="searchDrug()">查詢</button>
+  <button onclick="resetSearch()">重置</button>
+</div>
+
 
   <!-- 篩選區 -->
   <div class="filter-section">
