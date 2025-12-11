@@ -165,6 +165,21 @@
       table { font-size: 12px; }
     }
 
+    /* ✅ 專門給「庫存量（輸入）」那欄用的輸入框 */
+    .stock-input {
+      width: 100%;
+      border-radius: 999px;
+    }
+
+    /* 📱 手機版放大庫存輸入框：字變大、變高、好點按 */
+    @media (max-width: 640px) {
+      .stock-input {
+        font-size: 18px;
+        padding: 10px 16px;
+        height: 44px;
+      }
+    }
+
     /* ===========================
        🔥 滿版緊急畫面（Modal）
     =========================== */
@@ -412,7 +427,7 @@
         <td>${item.藥代}</td>
         <td>${item.藥品}</td>
         <td>${item.月用量}</td>
-        <td><input type="number" min="0" style="width:100%;" value="${item.庫存量 ?? ""}" placeholder="輸入"></td>
+        <td><input type="number" min="0" class="stock-input" value="${item.庫存量 ?? ""}" placeholder="輸入"></td>
         <td class="status-cell"></td>
       `;
 
