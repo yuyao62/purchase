@@ -92,3 +92,9 @@ if __name__ == "__main__":
         excel_file = sys.argv[1]
         output_file = sys.argv[2] if len(sys.argv) > 2 else None
         excel_to_json(excel_file, output_file)
+
+        print("❗ 用法：python excel_to_json.py <Excel檔案路徑> [輸出檔名]")
+    else:
+        excel_file = sys.argv[1]
+        output_file = sys.argv[2] if len(sys.argv) > 2 else None
+        excel_to_json(excel_file, output_file)
