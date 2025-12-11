@@ -2,10 +2,10 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <title>藥品廠商統計 Web App</title>
+  <title>藥品盤點系統</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- 讀取 Excel 用的 SheetJS（XLSX） -->
+  <!-- 讀 Excel 用的 SheetJS -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
@@ -15,305 +15,326 @@
     }
     body {
       margin: 0;
-      padding: 16px;
       background: #f3f4f6;
     }
-    .app {
-      max-width: 1100px;
-      margin: 0 auto;
+    header {
+      display: flex;
+      align-items: center;
+      padding: 8px 20px;
       background: #ffffff;
-      border-radius: 16px;
-      padding: 20px;
-      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+      border-bottom: 1px solid #e5e7eb;
     }
-    h1 {
-      margin-top: 0;
-      font-size: 22px;
+    header img {
+      width: 32px;
+      height: 32px;
+      margin-right: 8px;
     }
-    .section-title {
-      font-weight: 600;
-      margin: 16px 0 8px;
+    header h1 {
+      margin: 0;
+      font-size: 20px;
     }
-    .uploader {
-      border: 2px dashed #cbd5f5;
-      border-radius: 12px;
-      padding: 16px;
-      text-align: center;
-      background: #f9fafb;
+    .container {
+      padding: 16px 20px;
     }
-    input[type="file"] {
-      margin-top: 8px;
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
     }
-    .summary-table, .detail-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 8px;
+    .btn {
+      border: none;
+      border-radius: 4px;
+      padding: 8px 14px;
       font-size: 14px;
-    }
-    .summary-table th, .summary-table td,
-    .detail-table th, .detail-table td {
-      border: 1px solid #e5e7eb;
-      padding: 6px 8px;
-      text-align: left;
-    }
-    .summary-table th, .detail-table th {
-      background: #f3f4f6;
-    }
-    .summary-row {
       cursor: pointer;
+      color: #fff;
+      background: #1d4ed8;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
-    .summary-row:hover {
-      background: #e5f0ff;
+    .btn-secondary {
+      background: #6b7280;
     }
-    .highlight {
-      background: #dbeafe !important;
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
-    .badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 999px;
-      background: #eef2ff;
-      font-size: 12px;
-      margin-left: 4px;
-    }
-    .info-text {
+    .info {
       font-size: 13px;
       color: #6b7280;
-      margin-top: 4px;
     }
     .error {
-      color: #b91c1c;
       font-size: 13px;
-      margin-top: 6px;
+      color: #b91c1c;
+      margin-top: 4px;
     }
-    .vendor-title {
-      margin-top: 16px;
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #ffffff;
+    }
+    th, td {
+      border: 1px solid #e5e7eb;
+      padding: 8px;
+      text-align: left;
+      font-size: 14px;
+    }
+    th {
+      background: #f9fafb;
       font-weight: 600;
-      font-size: 15px;
+    }
+    .stock-input {
+      width: 100%;
+      padding: 4px 6px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    .status-ok {
+      color: #15803d;
+      font-weight: 600;
+    }
+    .status-warn {
+      color: #b45309;
+      font-weight: 600;
+    }
+    .status-bad {
+      color: #b91c1c;
+      font-weight: 600;
     }
   </style>
 </head>
 <body>
-  <div class="app">
-    <h1>藥品廠商統計 Web App</h1>
-    <p class="info-text">
-      上傳含有「藥品、廠商、累計數量/累計用量」欄位的 Excel 檔，
-      系統會依「廠商前兩碼」統計總累計用量，並可點選查看各廠商的藥品清單。
-    </p>
+  <header>
+    <!-- 你可以改成自己的圖片 -->
+    <img src="https://cdn-icons-png.flaticon.com/512/2966/2966327.png" alt="factory" />
+    <h1>藥品盤點系統</h1>
+  </header>
 
-    <!-- 檔案上傳區 -->
-    <div class="uploader">
-      <div class="section-title">1️⃣ 上傳 Excel 檔</div>
-      <input type="file" id="fileInput" accept=".xlsx,.xls" />
-      <div id="fileInfo" class="info-text"></div>
-      <div id="errorBox" class="error"></div>
-    </div>
+  <div class="container">
+    <div class="toolbar">
+      <!-- 隱藏的檔案 input，用按鈕觸發 -->
+      <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none" />
+      <button class="btn" id="uploadBtn">📂 上傳 Excel</button>
 
-    <!-- 廠商代碼統計區 -->
-    <div style="margin-top: 20px;">
-      <div class="section-title">2️⃣ 廠商代碼統計 (點選可查看藥品)</div>
-      <table class="summary-table" id="summaryTable">
-        <thead>
-          <tr>
-            <th style="width: 80px;">編號</th>
-            <th style="width: 120px;">廠商代碼</th>
-            <th>總累計用量</th>
-          </tr>
-        </thead>
-        <tbody id="summaryBody">
-          <tr><td colspan="3">尚未載入資料</td></tr>
-        </tbody>
-      </table>
-    </div>
+      <button class="btn btn-secondary" id="downloadBtn" disabled>📨 下載結果</button>
 
-    <!-- 藥品明細區 -->
-    <div style="margin-top: 20px;">
-      <div class="section-title">3️⃣ 藥品清單</div>
-      <div id="vendorTitle" class="vendor-title">尚未選擇廠商代碼</div>
-      <table class="detail-table" id="detailTable">
-        <thead>
-          <tr>
-            <th style="width: 60px;">序號</th>
-            <th>藥品</th>
-            <th style="width: 120px;">累計用量</th>
-            <th style="width: 180px;">廠商</th>
-          </tr>
-        </thead>
-        <tbody id="detailBody">
-          <tr><td colspan="4">請先從上方表格點選一個廠商代碼</td></tr>
-        </tbody>
-      </table>
+      <div class="info" id="fileInfo">請先上傳含有「藥品」、「累計數量/累計用量」欄位的 Excel。</div>
     </div>
+    <div id="errorBox" class="error"></div>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 40%;">藥品名稱</th>
+          <th style="width: 20%;">累計用量</th>
+          <th style="width: 20%;">庫存</th>
+          <th style="width: 20%;">狀態</th>
+        </tr>
+      </thead>
+      <tbody id="drugBody">
+        <tr><td colspan="4">尚未載入資料</td></tr>
+      </tbody>
+    </table>
   </div>
 
   <script>
+    const uploadBtn = document.getElementById("uploadBtn");
+    const downloadBtn = document.getElementById("downloadBtn");
     const fileInput = document.getElementById("fileInput");
     const fileInfo = document.getElementById("fileInfo");
     const errorBox = document.getElementById("errorBox");
-    const summaryBody = document.getElementById("summaryBody");
-    const detailBody = document.getElementById("detailBody");
-    const vendorTitle = document.getElementById("vendorTitle");
+    const drugBody = document.getElementById("drugBody");
 
-    let fullData = [];        // 原始每一列資料
-    let summaryData = [];     // 廠商代碼 + 總累計用量
+    // 存目前表格的資料
+    let drugRows = [];
 
-    fileInput.addEventListener("change", handleFile, false);
+    uploadBtn.addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", handleFile);
+    downloadBtn.addEventListener("click", downloadCSV);
 
-    function handleFile(event) {
-      const file = event.target.files[0];
+    function handleFile(e) {
+      const file = e.target.files[0];
       errorBox.textContent = "";
-      vendorTitle.textContent = "尚未選擇廠商代碼";
-      detailBody.innerHTML = "<tr><td colspan='4'>請先從上方表格點選一個廠商代碼</td></tr>";
-
       if (!file) {
-        fileInfo.textContent = "";
-        summaryBody.innerHTML = "<tr><td colspan='3'>尚未載入資料</td></tr>";
+        fileInfo.textContent = "未選擇檔案";
         return;
       }
-
       fileInfo.textContent = `已選擇檔案：${file.name}`;
-
       const reader = new FileReader();
-      reader.onload = function (e) {
+      reader.onload = function (evt) {
         try {
-          const data = new Uint8Array(e.target.result);
+          const data = new Uint8Array(evt.target.result);
           const workbook = XLSX.read(data, { type: "array" });
 
-          // 盡量用 Sheet1；如果沒有，就用第一個 sheet
           const sheetName = workbook.Sheets["Sheet1"]
             ? "Sheet1"
             : workbook.SheetNames[0];
           const sheet = workbook.Sheets[sheetName];
+          let rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
 
-          let json = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-
-          if (!json.length) {
-            throw new Error("工作表為空或欄位名稱無法辨識");
+          if (!rows.length) {
+            throw new Error("工作表為空或欄位無法辨識");
           }
-
-          processData(json);
+          processData(rows);
         } catch (err) {
           console.error(err);
           errorBox.textContent = "解析 Excel 發生錯誤：" + err.message;
-          summaryBody.innerHTML = "<tr><td colspan='3'>載入失敗</td></tr>";
         }
       };
       reader.readAsArrayBuffer(file);
     }
 
     function processData(rows) {
-      // 1. 欄位名稱處理 (trim + rename)
-      const cleanedRows = rows.map((row) => {
-        const newRow = {};
-        for (const key in row) {
-          const newKey = key.trim();
-          newRow[newKey] = row[key];
+      drugRows = [];
+
+      rows.forEach((row) => {
+        // 先把欄位名稱 trim
+        const cleaned = {};
+        for (const k in row) {
+          cleaned[k.trim()] = row[k];
         }
 
-        // 處理「累計數量」→「累計用量」
-        if ("累計數量" in newRow && !("累計用量" in newRow)) {
-          newRow["累計用量"] = newRow["累計數量"];
-        }
+        // 取藥品名稱欄位（假設叫「藥品」或「藥品名稱」）
+        const name =
+          cleaned["藥品"] !== undefined
+            ? cleaned["藥品"]
+            : cleaned["藥品名稱"];
 
-        // 確保有累計用量欄位
-        if (!("累計用量" in newRow)) {
-          newRow["累計用量"] = 0;
-        }
+        if (!name) return; // 沒藥品名就跳過
 
-        // 廠商空值處理
-        let vendor = newRow["廠商"];
-        if (vendor === undefined || vendor === null || String(vendor).trim() === "") {
-          vendor = "未標示廠商";
-        }
-        vendor = String(vendor).trim();
-        newRow["廠商"] = vendor;
+        // 處理累計用量：可能叫「累計用量」或「累計數量」
+        let used =
+          cleaned["累計用量"] !== undefined
+            ? cleaned["累計用量"]
+            : cleaned["累計數量"];
 
-        // 廠商代碼 = 前 2 碼
-        newRow["廠商代碼"] = vendor.slice(0, 2);
-
-        // 數字處理
-        let amount = newRow["累計用量"];
-        let num = parseFloat(String(amount).toString().replace(/,/g, ""));
+        let num = parseFloat(String(used).toString().replace(/,/g, ""));
         if (isNaN(num)) num = 0;
-        newRow["累計用量"] = num;
 
-        return newRow;
-      });
-
-      fullData = cleanedRows;
-
-      // 2. 依廠商代碼 groupby 累計
-      const summaryMap = new Map();
-      for (const row of fullData) {
-        const code = row["廠商代碼"] || "NA";
-        const amt = row["累計用量"] || 0;
-        if (!summaryMap.has(code)) {
-          summaryMap.set(code, 0);
-        }
-        summaryMap.set(code, summaryMap.get(code) + amt);
-      }
-
-      summaryData = Array.from(summaryMap.entries())
-        .map(([code, total]) => ({ 廠商代碼: code, 總累計用量: total }))
-        // 可以改排序，現在是照總累計用量由大到小
-        .sort((a, b) => b.總累計用量 - a.總累計用量);
-
-      renderSummaryTable();
-    }
-
-    function renderSummaryTable() {
-      if (!summaryData.length) {
-        summaryBody.innerHTML = "<tr><td colspan='3'>沒有資料</td></tr>";
-        return;
-      }
-
-      summaryBody.innerHTML = "";
-      summaryData.forEach((row, idx) => {
-        const tr = document.createElement("tr");
-        tr.className = "summary-row";
-        tr.dataset.vendorCode = row["廠商代碼"];
-
-        tr.innerHTML = `
-          <td>${idx + 1}</td>
-          <td>${row["廠商代碼"]}</td>
-          <td>${row["總累計用量"].toFixed(1)}</td>
-        `;
-
-        tr.addEventListener("click", () => {
-          // 取消其他 highlight
-          document
-            .querySelectorAll(".summary-row")
-            .forEach((el) => el.classList.remove("highlight"));
-          tr.classList.add("highlight");
-          showVendorDetail(row["廠商代碼"]);
+        drugRows.push({
+          name: String(name),
+          used: num,
+          stock: 0,
+          status: "",
         });
-
-        summaryBody.appendChild(tr);
       });
+
+      renderTable();
     }
 
-    function showVendorDetail(vendorCode) {
-      const rows = fullData.filter((row) => row["廠商代碼"] === vendorCode);
-
-      vendorTitle.textContent = `廠商代碼「${vendorCode}」的藥品清單（共 ${rows.length} 筆）`;
-
-      if (!rows.length) {
-        detailBody.innerHTML =
-          "<tr><td colspan='4'>此廠商代碼沒有對應藥品資料</td></tr>";
+    function renderTable() {
+      if (!drugRows.length) {
+        drugBody.innerHTML = "<tr><td colspan='4'>沒有資料</td></tr>";
+        downloadBtn.disabled = true;
         return;
       }
 
-      detailBody.innerHTML = "";
-      rows.forEach((row, index) => {
+      drugBody.innerHTML = "";
+      drugRows.forEach((drug, idx) => {
         const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${index + 1}</td>
-          <td>${String(row["藥品"] || "").slice(0, 80)}</td>
-          <td>${row["累計用量"].toFixed(1)}</td>
-          <td>${row["廠商"]}</td>
-        `;
-        detailBody.appendChild(tr);
+
+        const nameTd = document.createElement("td");
+        nameTd.textContent = drug.name;
+
+        const usedTd = document.createElement("td");
+        usedTd.textContent = drug.used.toFixed(1);
+
+        const stockTd = document.createElement("td");
+        const input = document.createElement("input");
+        input.type = "number";
+        input.min = "0";
+        input.step = "0.1";
+        input.value = drug.stock;
+        input.className = "stock-input";
+        input.addEventListener("input", () => {
+          const v = parseFloat(input.value);
+          drug.stock = isNaN(v) ? 0 : v;
+          updateStatus(drug, statusTd);
+        });
+        stockTd.appendChild(input);
+
+        const statusTd = document.createElement("td");
+        updateStatus(drug, statusTd);
+
+        tr.appendChild(nameTd);
+        tr.appendChild(usedTd);
+        tr.appendChild(stockTd);
+        tr.appendChild(statusTd);
+        drugBody.appendChild(tr);
       });
+
+      downloadBtn.disabled = false;
+    }
+
+    // 根據 庫存 / 累計用量 給狀態
+    function updateStatus(drug, td) {
+      td.textContent = "";
+      td.className = "";
+
+      const used = drug.used;
+      const stock = drug.stock;
+
+      // 沒有歷史用量資料
+      if (used <= 0 && stock > 0) {
+        td.textContent = "🟢 有庫存（無歷史用量）";
+        td.classList.add("status-ok");
+        drug.status = td.textContent;
+        return;
+      }
+      if (used <= 0 && stock <= 0) {
+        td.textContent = "—";
+        drug.status = td.textContent;
+        return;
+      }
+
+      const ratio = stock / used;
+
+      if (ratio >= 1) {
+        td.textContent = "🟢 足夠";
+        td.classList.add("status-ok");
+      } else if (ratio >= 0.5) {
+        td.textContent = "🟡 即將不足";
+        td.classList.add("status-warn");
+      } else if (stock > 0) {
+        td.textContent = "🔴 庫存不足";
+        td.classList.add("status-bad");
+      } else {
+        td.textContent = "🔴 無庫存";
+        td.classList.add("status-bad");
+      }
+      drug.status = td.textContent;
+    }
+
+    // 下載結果成 CSV
+    function downloadCSV() {
+      if (!drugRows.length) return;
+
+      const header = ["藥品名稱", "累計用量", "庫存", "狀態"];
+      const lines = [header.join(",")];
+
+      drugRows.forEach((d) => {
+        const row = [
+          `"${d.name.replace(/"/g, '""')}"`,
+          d.used.toFixed(1),
+          d.stock,
+          `"${(d.status || "").replace(/"/g, '""')}"`,
+        ];
+        lines.push(row.join(","));
+      });
+
+      const csvContent = lines.join("\r\n");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "藥品盤點結果.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     }
   </script>
 </body>
