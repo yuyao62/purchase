@@ -45,16 +45,9 @@
     .pill-buy { background:#fee2e2; color:#991b1b; }
     .pill-ok { background:#dcfce7; color:#166534; }
 
-    /* ✅ 表格外框：手機可滑動（但我們也會縮欄位，盡量同頁看得到庫存） */
+    /* ===== 桌機表格 ===== */
     .table-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
-
-    table{
-      width:100%;
-      border-collapse:collapse;
-      font-size:13px;
-      table-layout: fixed;     /* ✅ 欄寬才可控 */
-      min-width: 0;            /* ✅ 不強制變很寬 */
-    }
+    table{ width:100%; border-collapse:collapse; font-size:13px; }
     th{
       background:#e5e7eb;
       padding:8px;
@@ -69,48 +62,87 @@
     }
     tr:nth-child(even) td { background:#f3f4f6; }
 
-    /* ✅ 欄寬配置（桌機） */
     th.col-code,  td.col-code  { width: 92px; }
-    th.col-drug,  td.col-drug  { width: 360px; }
+    th.col-drug,  td.col-drug  { width: 420px; }
     th.col-usage, td.col-usage { width: 96px; text-align:right; }
-    th.col-stock, td.col-stock { width: 110px; text-align:center; }
-    th.col-status,td.col-status{ width: 96px; }
+    th.col-stock, td.col-stock { width: 120px; text-align:center; }
+    th.col-status,td.col-status{ width: 120px; }
 
-    /* ✅ 藥品欄：超出省略 */
-    th.col-drug, td.col-drug{
-      overflow:hidden;
-      text-overflow:ellipsis;
-      white-space:nowrap;
-    }
-
-    /* ✅ 庫存欄固定寬度 + 置中（輸入框不要太大） */
     td.col-stock{ padding:4px; }
     td.col-stock input[type="number"]{
-      width:80px;
+      width:84px;
       text-align:center;
       padding:6px 8px;
       border-radius:10px;
       font-size:13px;
     }
 
-    /* ✅ 狀態顏色（可選） */
+    /* 狀態標籤 */
     .tag { display:inline-block; padding:4px 10px; border-radius:999px; font-weight:800; font-size:12px; }
     .tag-empty{ background:#e5e7eb; color:#111827; }
     .tag-buy{ background:#fee2e2; color:#b91c1c; }
     .tag-ok{ background:#dcfce7; color:#166534; }
 
-    /* ✅ 手機：更激進縮「藥品」欄，讓庫存能同頁操作 */
-    @media (max-width: 480px){
+    /* ===== ✅ 手機：改成卡片（完全不用左右滑） ===== */
+    @media (max-width: 520px){
       .app{ margin:12px; padding:16px; }
-      th, td{ padding:6px 6px; }
+      .table-wrap{ overflow: visible; }
 
-      th.col-code,  td.col-code  { width: 76px; }
-      th.col-drug,  td.col-drug  { width: 150px; }  /* ⭐ 你可改 130~180 */
-      th.col-usage, td.col-usage { width: 72px; }
-      th.col-stock, td.col-stock { width: 92px; }
-      th.col-status,td.col-status{ width: 80px; }
+      table{ border-collapse: separate; border-spacing: 0 10px; }
+      thead{ display:none; }
 
-      td.col-stock input[type="number"]{ width:58px; padding:6px 6px; font-size:12px; }
+      tbody, tr, td{ display:block; width:100%; }
+      tr{
+        background:#fff;
+        border-radius:16px;
+        box-shadow: 0 10px 24px rgba(0,0,0,.08);
+        overflow:hidden;
+      }
+      tr:nth-child(even) td{ background:transparent; }
+
+      td{ white-space: normal; padding: 10px 12px; }
+
+      td.col-code{ font-weight:900; font-size:14px; padding-bottom: 6px; }
+      td.col-usage{ text-align:left; color:#374151; padding-top:0; padding-bottom: 8px; }
+
+      td.col-drug{
+        color:#111827;
+        font-weight:700;
+        line-height:1.35;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow:hidden;
+        padding-top:0;
+        padding-bottom: 10px;
+      }
+
+      td.col-stock{
+        padding-top:0;
+        display:flex;
+        align-items:center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      td.col-stock::before{
+        content:"庫存";
+        font-weight:900;
+        color:#111827;
+      }
+      td.col-stock input[type="number"]{
+        width: 110px;
+        font-size:16px;
+        padding:10px 10px;
+        border-radius:14px;
+      }
+
+      td.col-status{ padding-top:0; padding-bottom: 12px; }
+      td.col-status::before{
+        content:"狀態";
+        font-weight:900;
+        color:#111827;
+        margin-right: 10px;
+      }
     }
 
     .modal {
@@ -132,7 +164,8 @@
 
     <label>搜尋：</label>
     <div style="position:relative;flex:1">
-      <input id="searchInput" style="width:100%" placeholder="藥代 / 藥名">
+      <!-- ✅ 修正：搜尋提示包含廠商 -->
+      <input id="searchInput" style="width:100%" placeholder="藥代 / 藥名 / 廠商">
     </div>
 
     <button id="searchBtn">查詢</button>
@@ -151,7 +184,6 @@
   <div class="table-wrap">
     <table>
       <thead>
-        <!-- ✅ 表格已移除「廠商」 -->
         <tr>
           <th class="col-code">藥代</th>
           <th class="col-drug">藥品</th>
@@ -176,24 +208,23 @@
 
 <script>
 (() => {
-  let rawData = [], viewData = [], chart;
+  let rawData=[], viewData=[], chart;
+  const $=id=>document.getElementById(id);
+  const isEng=s=>/^[A-Za-z]/.test(s);
 
-  const $ = id => document.getElementById(id);
-  const isEng = s => /^[A-Za-z]/.test(s);
-
-  const vendorKey = v => {
-    v = String(v || "").trim();
-    return isEng(v) ? v.slice(0,5).toUpperCase() : v.slice(0,2);
+  const vendorKey=v=>{
+    v=String(v||"").trim();
+    return isEng(v)?v.slice(0,5).toUpperCase():v.slice(0,2);
   };
 
   function populateVendors(){
-    const keys = [...new Set(rawData.map(x => vendorKey(x.廠商)))].filter(Boolean);
+    const keys=[...new Set(rawData.map(x=>vendorKey(x.廠商)))].filter(Boolean);
     keys.sort((a,b)=>{
       const ae=/^[A-Z]/.test(a), be=/^[A-Z]/.test(b);
-      if(ae!==be) return ae-be; // 中文先
+      if(ae!==be) return ae-be;  // 中文先
       return a.localeCompare(b);
     });
-    $("vendorSelect").innerHTML = '<option value="">全部</option>';
+    $("vendorSelect").innerHTML='<option value="">全部</option>';
     keys.forEach(k=>{
       const o=document.createElement("option");
       o.value=k;
@@ -203,36 +234,35 @@
   }
 
   function filterData(){
-    const vSel = $("vendorSelect").value;
-    const kw = $("searchInput").value.trim();
-    const needOnly = $("needBuyOnly").checked;
+    const vSel=$("vendorSelect").value;
+    const kwRaw=$("searchInput").value.trim();
+    const kw=kwRaw.toLowerCase();
+    const needOnly=$("needBuyOnly").checked;
 
-    const k = kw.toLowerCase();
-
-    let base = rawData.filter(x=>{
+    let base=rawData.filter(x=>{
       if(vSel && vendorKey(x.廠商)!==vSel) return false;
       if(!kw) return true;
 
-      // ✅ 只搜「藥代 / 藥品」
-      const code = String(x.藥代 || "").toLowerCase();
-      const name = String(x.藥品 || "").toLowerCase();
-      return code.includes(k) || name.includes(k);
+      const code=String(x.藥代||"").toLowerCase();
+      const name=String(x.藥品||"").toLowerCase();
+      const vendor=String(x.廠商||"").toLowerCase(); // ✅ 修正：加入廠商比對
+
+      // ✅ 修正：可用「藥代 / 藥名 / 廠商」搜尋
+      return code.includes(kw) || name.includes(kw) || vendor.includes(kw);
     });
 
-    viewData = needOnly ? base.filter(x=>x.需採購) : base;
+    viewData=needOnly?base.filter(x=>x.需採購):base;
     render(base);
   }
 
   function setStatusCell(td, x){
-    if(x.庫存量 == null){
+    if(x.庫存量==null){
       td.innerHTML = `<span class="tag tag-empty">未輸入</span>`;
       return;
     }
-    if(x.需採購){
-      td.innerHTML = `<span class="tag tag-buy">需採購</span>`;
-    }else{
-      td.innerHTML = `<span class="tag tag-ok">庫存足夠</span>`;
-    }
+    td.innerHTML = x.需採購
+      ? `<span class="tag tag-buy">需採購</span>`
+      : `<span class="tag tag-ok">庫存足夠</span>`;
   }
 
   function moveToNextStockInput(currentInput){
@@ -242,55 +272,46 @@
       const next = inputs[idx + 1];
       next.focus();
       next.select?.();
-      // 讓下一列更容易看到（避免被鍵盤擋住）
       next.scrollIntoView({ block: "center", behavior: "smooth" });
     }else{
-      // 最後一筆：收鍵盤（如果是手機）
       currentInput.blur();
     }
   }
 
   function render(base){
-    $("drugBody").innerHTML = "";
-
-    viewData.forEach((x, i)=>{
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
+    $("drugBody").innerHTML="";
+    viewData.forEach(x=>{
+      const tr=document.createElement("tr");
+      tr.innerHTML=`
         <td class="col-code">${x.藥代}</td>
         <td class="col-drug" title="${String(x.藥品||"")}">${x.藥品}</td>
         <td class="col-usage">${x.月用量}</td>
-        <td class="col-stock"><input type="number" inputmode="numeric" value="${x.庫存量 ?? ""}"></td>
+        <td class="col-stock"><input type="number" inputmode="numeric" value="${x.庫存量??""}"></td>
         <td class="col-status"></td>
       `;
 
-      const inp = tr.querySelector('input[type="number"]');
-      const statusTd = tr.querySelector(".col-status");
+      const inp=tr.querySelector('input[type="number"]');
+      const statusTd=tr.querySelector(".col-status");
 
-      // 初始狀態
       setStatusCell(statusTd, x);
 
-      // ✅ 輸入更新狀態 + 統計
       inp.addEventListener("input", ()=>{
-        x.庫存量 = inp.value === "" ? null : +inp.value;
-        x.需採購 = (x.庫存量 != null) && (x.月用量 > x.庫存量);
+        x.庫存量 = inp.value===""?null:+inp.value;
+        x.需採購 = (x.庫存量!=null) && (x.月用量 > x.庫存量);
         setStatusCell(statusTd, x);
         renderStats(base);
       });
 
-      // ✅ Enter / 下一步：跳下一列庫存
       inp.addEventListener("keydown", (e)=>{
-        if(e.key === "Enter"){
+        if(e.key==="Enter"){
           e.preventDefault();
           moveToNextStockInput(inp);
         }
       });
 
-      // ✅ 有些手機不會送 Enter key（Next/Done），用 change 當補強：輸入完離開也自動跳
+      // iOS 有時沒有 Enter key，用 change 當補強
       inp.addEventListener("change", ()=>{
-        // 只有在有值時才跳（避免空值一直跳）
-        if(inp.value !== ""){
-          moveToNextStockInput(inp);
-        }
+        if(inp.value!=="") moveToNextStockInput(inp);
       });
 
       $("drugBody").appendChild(tr);
@@ -300,42 +321,41 @@
   }
 
   function renderStats(base){
-    const total = base.length;
-    const need = base.filter(x=>x.需採購).length;
-    const ok = base.filter(x=>x.庫存量!=null && !x.需採購).length;
-
-    $("totalCount").textContent = `共 ${total} 筆`;
-    $("needBuyCount").textContent = `需採購 ${need} 筆`;
-    $("okCount").textContent = `庫存足夠 ${ok} 筆`;
+    const total=base.length;
+    const need=base.filter(x=>x.需採購).length;
+    const ok=base.filter(x=>x.庫存量!=null&&!x.需採購).length;
+    $("totalCount").textContent=`共 ${total} 筆`;
+    $("needBuyCount").textContent=`需採購 ${need} 筆`;
+    $("okCount").textContent=`庫存足夠 ${ok} 筆`;
 
     if(chart) chart.destroy();
-    chart = new Chart($("chart"),{
+    chart=new Chart($("chart"),{
       type:"pie",
-      data:{ labels:["需採購","庫存足夠"], datasets:[{ data:[need, ok] }] },
+      data:{labels:["需採購","庫存足夠"],datasets:[{data:[need,ok]}]},
     });
   }
 
   async function load(){
-    const r = await fetch("inventory.json");
-    rawData = (await r.json()).map(x=>({ ...x, 庫存量:null, 需採購:false }));
+    const r=await fetch("inventory.json");
+    rawData=(await r.json()).map(x=>({...x,庫存量:null,需採購:false}));
     populateVendors();
     filterData();
   }
 
-  $("searchBtn").onclick = filterData;
-  $("resetBtn").onclick = ()=>{
-    $("vendorSelect").value = "";
-    $("searchInput").value = "";
-    $("needBuyOnly").checked = false;
+  $("searchBtn").onclick=filterData;
+  $("resetBtn").onclick=()=>{
+    $("vendorSelect").value="";
+    $("searchInput").value="";
+    $("needBuyOnly").checked=false;
     filterData();
   };
-  $("vendorSelect").onchange = filterData;
-  $("needBuyOnly").onchange = filterData;
-  $("searchInput").addEventListener("keydown", (e)=>{
+  $("vendorSelect").onchange=filterData;
+  $("needBuyOnly").onchange=filterData;
+  $("searchInput").addEventListener("keydown",(e)=>{
     if(e.key==="Enter"){ e.preventDefault(); filterData(); }
   });
 
-  $("emergencyBtn").onclick = ()=> $("emergencyModal").style.display = "flex";
+  $("emergencyBtn").onclick=()=>$("emergencyModal").style.display="flex";
 
   load();
 })();
