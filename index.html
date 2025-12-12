@@ -7,12 +7,28 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-html, body { width: 100%; max-width: 100%; overflow-x: hidden; }
-* { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-body { margin: 0; background: #eef1f7; min-height: 100vh; }
+/* ===== 防止 iOS 橫向溢出（核心） ===== */
+html, body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
 
-body.lock { overflow: hidden; height: 100vh; } /* ✅ iOS：切到需採購頁時鎖背景 */
+* {
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
 
+body {
+  margin: 0;
+  background: #eef1f7;
+  min-height: 100vh;
+}
+
+/* ✅ iOS：切到需採購頁時鎖背景（不再強制 height:100vh，較不會多一行空白） */
+body.lock { overflow: hidden; }
+
+/* ===== 主容器 ===== */
 .app {
   width: min(1100px, 100%);
   background: #fff;
@@ -163,11 +179,14 @@ td.col-stock input { width: 80px; text-align: center; border-radius: 10px; }
 /* ===== 需採購清單：獨立畫面（真切頁） ===== */
 .buy-screen{
   display:none;
-  min-height: 100vh;
+  height: 100dvh;                 /* ✅ iOS 友善 */
+  overflow-y: auto;               /* ✅ 讓採購頁自己滾動 */
+  -webkit-overflow-scrolling: touch;
   background:#0b1220;
   color:#fff;
-  padding:16px;
+  padding: calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));
 }
+
 .buy-panel{ width:min(980px, 100%); margin:0 auto; }
 .buy-head{
   display:flex;
@@ -181,48 +200,73 @@ td.col-stock input { width: 80px; text-align: center; border-radius: 10px; }
 .buy-sub{ color:#cbd5e1; font-size:13px; margin-top:4px; }
 .buy-actions{ display:flex; flex-wrap:wrap; gap:10px; }
 
-.buy-card{
-  background:#111827;
-  border:1px solid rgba(255,255,255,.08);
-  border-radius:14px;
-  padding:12px;
-  margin-bottom:10px;
+/* ✅ NEW：廠商分組標題（廠商只顯示一次） */
+.vendor-group{
+  margin: 14px 0 6px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: #020617;
+  font-weight: 900;
+  font-size: 14px;
+  color: #e5e7eb;
+  letter-spacing: .5px;
 }
-.buy-row{
+
+/* ✅ NEW：一列一筆（極致密集） */
+.buy-line{
   display:grid;
-  grid-template-columns:110px 1fr 120px 120px 120px;
-  gap:10px;
-  align-items:start;
+  grid-template-columns: 84px 1fr auto;
+  gap: 10px;
+  align-items:center;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  background: rgba(17,24,39,.35);
+  border-radius: 12px;
+  margin-bottom: 8px;
 }
-.buy-row > div{ min-width:0; }
-.buy-k{ font-size:12px; color:#94a3b8; font-weight:800; }
-.buy-v{ font-size:14px; font-weight:800; overflow-wrap:anywhere; }
-.buy-pill{
+.buy-code{ font-weight: 900; font-size: 14px; color:#e5e7eb; }
+.buy-drug{
+  font-weight: 800;
+  font-size: 14px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.buy-meta{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  font-weight: 900;
+  white-space:nowrap;
+  font-size: 13px;
+}
+.buy-need{
   display:inline-block;
-  padding:4px 10px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:900;
+  padding: 4px 10px;
+  border-radius: 999px;
   background:#fecaca;
   color:#7f1d1d;
+  font-size: 12px;
+  font-weight: 900;
 }
+
+/* 手機：藥名可換行，資訊兩行更密集 */
 @media (max-width: 700px){
-  .buy-row{
-    grid-template-columns:1fr 120px;
+  .buy-line{
+    grid-template-columns: 76px 1fr;
     grid-template-areas:
-      "code need"
-      "drug need"
-      "vendor need"
-      "usage stock"
-      "suggest suggest";
+      "code meta"
+      "drug drug";
+    gap: 6px 10px;
+    padding: 10px;
   }
-  .b-code{grid-area:code;}
-  .b-drug{grid-area:drug;}
-  .b-vendor{grid-area:vendor;}
-  .b-usage{grid-area:usage;}
-  .b-stock{grid-area:stock;}
-  .b-suggest{grid-area:suggest;}
-  .b-need{grid-area:need; text-align:right;}
+  .buy-code{ grid-area: code; }
+  .buy-meta{ grid-area: meta; justify-content:flex-end; }
+  .buy-drug{
+    grid-area: drug;
+    white-space: normal;
+    line-height: 1.3;
+  }
 }
 </style>
 </head>
@@ -409,24 +453,17 @@ document.addEventListener("touchstart", ()=>{}, {passive:true});
   }
 
   function showBuyPage(){
-    $("mainApp").style.display = "none";     // ✅ 主畫面隱藏（真正切頁）
-    $("buyScreen").style.display = "block";  // ✅ 需採購頁顯示
+    $("mainApp").style.display = "none";
+    $("buyScreen").style.display = "block";
     document.body.classList.add("lock");
-
-    // ✅ iOS：強制回到最上面
-    window.scrollTo(0, 0);
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
+    $("buyScreen").scrollTop = 0; // ✅ 只滾動 buyScreen 本身
   }
 
   function showMainPage(){
     $("buyScreen").style.display = "none";
     $("mainApp").style.display = "block";
     document.body.classList.remove("lock");
-
     window.scrollTo(0, 0);
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
   }
 
   /* ========= 需採購清單內容 ========= */
@@ -458,71 +495,59 @@ document.addEventListener("touchstart", ()=>{}, {passive:true});
           建議採購量: suggest
         };
       })
-      .sort((a,b)=> (b.建議採購量 - a.建議採購量));
+      /* ✅ 廠商分組（同廠商排一起）+ 依建議採購量排序 */
+      .sort((a,b)=>{
+        if(a.廠商 !== b.廠商) return String(a.廠商).localeCompare(String(b.廠商), "zh-Hant");
+        return (b.建議採購量 - a.建議採購量);
+      });
   }
 
+  /* ✅ NEW：採購畫面改成「一列一筆」+「廠商只顯示一次」 */
   function openBuyScreen(){
     const list = getNeedBuyList();
     showBuyPage();
 
     const vSel = $("vendorSelect").value || "全部";
     const kw = $("searchInput").value.trim() || "（無）";
-    $("buyMeta").textContent = `篩選：廠商 ${vSel}｜關鍵字 ${kw}｜共 ${list.length} 筆（依建議採購量排序）`;
+    $("buyMeta").textContent = `篩選：廠商 ${vSel}｜關鍵字 ${kw}｜共 ${list.length} 筆（廠商分組 / 依缺量排序）`;
 
     const wrap = $("buyList");
     wrap.innerHTML = "";
 
     if(list.length === 0){
       const empty = document.createElement("div");
-      empty.className = "buy-card";
+      empty.style.padding = "12px";
+      empty.style.background = "#111827";
+      empty.style.borderRadius = "12px";
+      empty.style.border = "1px solid rgba(255,255,255,.08)";
       empty.innerHTML = `<div style="font-weight:900; font-size:16px">目前沒有需採購項目</div>
                          <div style="color:#94a3b8; margin-top:6px">請先在主畫面輸入庫存，系統才會判斷需採購。</div>`;
       wrap.appendChild(empty);
       return;
     }
 
+    let lastVendor = "";
     list.forEach(x=>{
-      const card = document.createElement("div");
-      card.className = "buy-card";
-      card.innerHTML = `
-        <div class="buy-row">
-          <div class="b-code">
-            <div class="buy-k">藥代</div>
-            <div class="buy-v">${x.藥代}</div>
-          </div>
+      if(x.廠商 !== lastVendor){
+        const vg = document.createElement("div");
+        vg.className = "vendor-group";
+        vg.textContent = x.廠商;
+        wrap.appendChild(vg);
+        lastVendor = x.廠商;
+      }
 
-          <div class="b-drug">
-            <div class="buy-k">藥品</div>
-            <div class="buy-v">${x.藥品}</div>
-          </div>
-
-          <div class="b-usage">
-            <div class="buy-k">月用量</div>
-            <div class="buy-v">${x.月用量}</div>
-          </div>
-
-          <div class="b-stock">
-            <div class="buy-k">庫存</div>
-            <div class="buy-v">${x.庫存量==null ? "未輸入" : x.庫存量}</div>
-          </div>
-
-          <div class="b-need">
-            <div class="buy-k">狀態</div>
-            <div class="buy-v"><span class="buy-pill">需採購</span></div>
-          </div>
-
-          <div class="b-vendor">
-            <div class="buy-k">廠商</div>
-            <div class="buy-v">${x.廠商}</div>
-          </div>
-
-          <div class="b-suggest">
-            <div class="buy-k">建議採購量</div>
-            <div class="buy-v">${x.建議採購量}</div>
-          </div>
+      const line = document.createElement("div");
+      line.className = "buy-line";
+      line.innerHTML = `
+        <div class="buy-code">${x.藥代}</div>
+        <div class="buy-drug" title="${x.藥品}">${x.藥品}</div>
+        <div class="buy-meta">
+          <span>月${x.月用量}</span>
+          <span>庫${x.庫存量==null ? "—" : x.庫存量}</span>
+          <span class="buy-need">缺${x.建議採購量}</span>
         </div>
       `;
-      wrap.appendChild(card);
+      wrap.appendChild(line);
     });
   }
 
