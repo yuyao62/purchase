@@ -8,123 +8,81 @@
 
   <style>
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-    body { margin: 0; padding: 0; background: #eef1f7; display: flex; justify-content: center; min-height: 100vh; }
-    .app { width: min(1100px, 100%); background: white; margin: 20px; padding: 24px; border-radius: 20px; box-shadow: 0 18px 40px rgba(0,0,0,0.12); }
+    body { margin: 0; background: #eef1f7; display: flex; justify-content: center; min-height: 100vh; }
+    .app { width: min(1100px, 100%); background: #fff; margin: 20px; padding: 24px; border-radius: 20px; box-shadow: 0 18px 40px rgba(0,0,0,.12); }
     h1 { text-align: center; margin-bottom: 6px; }
     .subtitle { text-align: center; color: #6b7280; font-size: 14px; margin-bottom: 20px; }
 
     .row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 16px; }
-    label { font-weight: 700; }
+    label { font-weight: 800; }
 
-    input, select { padding: 8px 14px; border-radius: 999px; border: 1px solid #d1d5db; font-size: 14px; outline: none; }
-    input:focus, select:focus { border-color: #6366f1; box-shadow: 0 0 0 1px rgba(99,102,241,0.4); }
-
-    button { padding: 8px 18px; border-radius: 999px; border: none; background: #4f46e5; color: white; font-weight: 800; cursor: pointer; transition: transform .1s ease, box-shadow .1s ease, background .15s ease; }
-    button:hover { background: #4338ca; transform: translateY(-1px); box-shadow: 0 8px 18px rgba(15,23,42,0.3); }
-    button:active { transform: translateY(0); box-shadow: none; }
-
-    .emergency-btn {
-      background: #dc2626;
+    input, select {
+      padding: 8px 14px;
       border-radius: 999px;
-      min-width: 70px;
-      height: 36px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0 16px;
-      box-shadow: 0 0 0 0 rgba(220,38,38,0.6);
-      animation: pulse-emergency 1.4s infinite;
-      font-weight: 900;
-      letter-spacing: 2px;
-    }
-    .emergency-btn:hover { background: #b91c1c; }
-    @keyframes pulse-emergency {
-      0% { box-shadow: 0 0 0 0 rgba(220,38,38,0.6); transform: scale(1); }
-      70% { box-shadow: 0 0 0 14px rgba(220,38,38,0); transform: scale(1.05); }
-      100% { box-shadow: 0 0 0 0 rgba(220,38,38,0); transform: scale(1); }
+      border: 1px solid #d1d5db;
+      font-size: 14px;
     }
 
-    .pill { padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 800; }
-    .pill-total { background: #dbeafe; color: #1e3a8a; }
-    .pill-buy { background: #fee2e2; color: #991b1b; }
-    .pill-ok  { background: #dcfce7; color: #166534; }
+    button {
+      padding: 8px 18px;
+      border-radius: 999px;
+      border: none;
+      background: #4f46e5;
+      color: #fff;
+      font-weight: 800;
+      cursor: pointer;
+    }
 
-    .table-wrap { background: #f9fafb; padding: 10px; max-height: 520px; overflow: auto; border-radius: 12px; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th { background: #e5e7eb; position: sticky; top: 0; padding: 8px; font-weight: 900; z-index: 5; }
-    td { padding: 6px 8px; }
-    tr:nth-child(even) td { background: #f3f4f6; }
-    @media (max-width: 640px) { table { font-size: 12px; } }
+    .emergency-btn { background:#dc2626; animation:pulse 1.4s infinite; }
+    @keyframes pulse {
+      0% { box-shadow:0 0 0 0 rgba(220,38,38,.6); }
+      70% { box-shadow:0 0 0 14px rgba(220,38,38,0); }
+      100% { box-shadow:0 0 0 0 rgba(220,38,38,0); }
+    }
 
-    .status-tag { padding: 4px 8px; border-radius: 999px; font-size: 12px; font-weight: 900; }
-    .status-empty { background: #e5e7eb; color: #374151; }
-    .status-buy   { background: #fee2e2; color: #b91c1c; }
-    .status-ok    { background: #dcfce7; color: #166534; }
+    .pill { padding:4px 12px; border-radius:999px; font-size:13px; font-weight:800; }
+    .pill-total { background:#dbeafe; color:#1e3a8a; }
+    .pill-buy { background:#fee2e2; color:#991b1b; }
+    .pill-ok { background:#dcfce7; color:#166534; }
 
-    .stock-input { width: 100%; border-radius: 999px; }
-    @media (max-width: 640px) { .stock-input { font-size: 18px; padding: 10px 16px; height: 44px; } }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th { background:#e5e7eb; padding:8px; position:sticky; top:0; }
+    td { padding:6px 8px; }
+    tr:nth-child(even) td { background:#f3f4f6; }
 
-    .autocomplete-box{
-      position:absolute; left:0; top:calc(100% + 6px); width:100%;
-      background:#fff; border-radius:12px; border:1px solid #e5e7eb;
-      box-shadow:0 10px 30px rgba(0,0,0,.15);
-      max-height:260px; overflow:auto; z-index:999; display:none;
-    }
-    .autocomplete-item{ padding:10px 14px; cursor:pointer; font-size:14px; display:flex; align-items:center; gap:6px; }
-    .autocomplete-item:hover{ background:#eef2ff; }
-    .autocomplete-type{ font-size:12px; font-weight:900; color:#4338ca; }
-    .autocomplete-star{ color:#f59e0b; font-weight:900; }
+    .status-tag { padding:4px 8px; border-radius:999px; font-size:12px; font-weight:800; }
+    .status-empty { background:#e5e7eb; }
+    .status-buy { background:#fee2e2; color:#b91c1c; }
+    .status-ok { background:#dcfce7; color:#166534; }
 
-    .modal{
-      display:none; position:fixed; z-index:9999; left:0; top:0;
-      width:100vw; height:100vh;
-      background: radial-gradient(circle at top, #7f1d1d 0, #111827 55%, #000 100%);
-      color:#f9fafb; justify-content:center; align-items:center;
+    .autocomplete-box {
+      position:absolute; background:#fff; width:100%;
+      border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.15);
+      max-height:240px; overflow:auto; display:none; z-index:999;
     }
-    .modal-content{
-      width:100%; height:100%;
-      display:flex; flex-direction:column; justify-content:center; align-items:center;
-      text-align:center; padding:20px; animation: popIn .25s ease-out;
+    .autocomplete-item { padding:10px 14px; cursor:pointer; }
+    .autocomplete-item:hover { background:#eef2ff; }
+
+    .modal {
+      display:none; position:fixed; inset:0;
+      background:radial-gradient(circle at top,#7f1d1d,#000);
+      color:#fff; justify-content:center; align-items:center;
     }
-    .modal-title{
-      font-size: clamp(32px, 6vw, 52px);
-      font-weight: 900; margin-bottom: 16px;
-      text-shadow: 0 0 12px rgba(0,0,0,.8);
-      letter-spacing: 4px; color: #fecaca;
-    }
-    .modal-text{
-      font-size: clamp(40px, 9vw, 72px);
-      font-weight: 900; margin-bottom: 30px;
-      text-shadow: 0 0 18px rgba(0,0,0,.9);
-      color: #fef2f2;
-    }
-    .modal-sub{ font-size: clamp(16px, 3.2vw, 22px); margin-bottom: 30px; opacity:.9; }
-    .modal-close{
-      padding:12px 26px; border-radius:999px;
-      background:#e5e7eb; color:#111827; border:none;
-      font-size:18px; cursor:pointer; font-weight:900;
-      box-shadow: 0 12px 30px rgba(0,0,0,.45);
-    }
-    .modal-close:hover{ background:#d1d5db; }
-    @keyframes popIn{ from{ transform:scale(.9); opacity:0; } to{ transform:scale(1); opacity:1; } }
   </style>
 </head>
 
 <body>
 <div class="app">
   <h1>藥品採購查詢系統</h1>
-  <div class="subtitle">
-    下拉：廠商代碼（中文前2碼 / 英文前5碼） · 搜尋：藥代前5碼 / 廠商代碼 / 藥名包含 · 點建議可直接查詢
-  </div>
+  <div class="subtitle">廠商下拉：中文前2碼 → 英文前5碼（中文優先顯示）</div>
 
   <div class="row">
-    <label>廠商（代碼）：</label>
+    <label>廠商：</label>
     <select id="vendorSelect"><option value="">全部</option></select>
 
     <label>搜尋：</label>
-    <div style="position:relative; flex: 1; min-width: 260px;">
-      <input id="searchInput" type="text" style="width:100%;"
-             placeholder="輸入：藥代前5碼 / 廠商(中2/英5) / 藥名">
+    <div style="position:relative;flex:1">
+      <input id="searchInput" style="width:100%" placeholder="藥代 / 廠商 / 藥名">
       <div id="autocompleteBox" class="autocomplete-box"></div>
     </div>
 
@@ -132,316 +90,126 @@
     <button id="resetBtn">重置</button>
     <button id="emergencyBtn" class="emergency-btn">緊急</button>
 
-    <label style="margin-left:auto;">
-      <input type="checkbox" id="needBuyOnly"> 只顯示需採購
-    </label>
+    <label><input type="checkbox" id="needBuyOnly"> 只顯示需採購</label>
   </div>
 
   <div class="row">
-    <span class="pill pill-total" id="totalCount">共 0 筆</span>
-    <span class="pill pill-buy" id="needBuyCount">需採購 0 筆</span>
-    <span class="pill pill-ok" id="okCount">庫存足夠 0 筆</span>
+    <span class="pill pill-total" id="totalCount"></span>
+    <span class="pill pill-buy" id="needBuyCount"></span>
+    <span class="pill pill-ok" id="okCount"></span>
   </div>
 
-  <div class="table-wrap">
-    <table>
-      <thead>
-      <tr>
-        <th>廠商</th>
-        <th>藥代</th>
-        <th>藥品名稱</th>
-        <th>月用量</th>
-        <th>庫存量（輸入）</th>
-        <th>狀態</th>
-      </tr>
-      </thead>
-      <tbody id="drugBody"></tbody>
-    </table>
-  </div>
+  <table>
+    <thead>
+      <tr><th>廠商</th><th>藥代</th><th>藥品</th><th>月用量</th><th>庫存</th><th>狀態</th></tr>
+    </thead>
+    <tbody id="drugBody"></tbody>
+  </table>
 
-  <div style="margin-top:20px;">
-    <canvas id="chart" height="180"></canvas>
-  </div>
+  <canvas id="chart" height="180"></canvas>
 </div>
 
 <div id="emergencyModal" class="modal">
-  <div class="modal-content">
-    <div class="modal-title">⚠️ 緊急通知</div>
-    <div class="modal-text">請洽店長</div>
-    <div class="modal-sub">如有疑問或藥品短缺，請立即聯絡店長處理。</div>
-    <button id="closeModal" class="modal-close">我知道了</button>
+  <div>
+    <h1>⚠️ 請洽店長</h1>
+    <button onclick="document.getElementById('emergencyModal').style.display='none'">我知道了</button>
   </div>
 </div>
 
 <script>
 (() => {
-  let rawData = [];
-  let viewData = [];
-  let chartInstance = null;
+  let rawData=[], viewData=[], chart;
 
-  const FAVORITE_VENDORS = [
-    "3M HEALTH CARE LIMITED",
-    "中國化學製藥股份有限公司",
-    "永信藥品工業股份有限公司"
-  ];
+  const $=id=>document.getElementById(id);
+  const isEng=s=>/^[A-Za-z]/.test(s);
+  const hasZh=s=>/[\u4e00-\u9fff]/.test(s);
 
-  const $ = (id) => document.getElementById(id);
-  const vendorSelect = $("vendorSelect");
-  const searchInput = $("searchInput");
-  const autocompleteBox = $("autocompleteBox");
+  const vendorKey=v=>{
+    v=String(v||"").trim();
+    return isEng(v)?v.slice(0,5).toUpperCase():v.slice(0,2);
+  };
 
-  const isEngStart = (s) => /^[A-Za-z]/.test(String(s || "").trim());
-  const hasChinese = (s) => /[\u4e00-\u9fff]/.test(String(s || "").trim());
-
-  // ✅ 下拉用：中文前2碼 / 英文前5碼（統一大寫）
-  function vendorKey(name) {
-    const s = String(name ?? "").trim();
-    if (!s) return "";
-    return (isEngStart(s) ? s.slice(0, 5) : s.slice(0, 2)).toUpperCase();
-  }
-
-  // 合併相同品項（同廠商/藥代/藥品，月用量加總）
-  function mergeSameItems(list) {
-    const merged = {};
-    for (const item of list) {
-      const key = `${item.廠商}__${item.藥代}__${item.藥品}`;
-      if (!merged[key]) merged[key] = { ...item, 月用量: Number(item.月用量) || 0 };
-      else merged[key].月用量 += Number(item.月用量) || 0;
-    }
-    return Object.values(merged);
-  }
-
-  // 搜尋：藥代前5碼
-  function matchDrugCodePrefix5(drugCode, keyword) {
-    if (!keyword) return false;
-    const code = String(drugCode ?? "").trim().toUpperCase();
-    const key  = String(keyword ?? "").trim().toUpperCase().slice(0, 5);
-    return key && code.startsWith(key);
-  }
-
-  // ✅ 搜尋：廠商（中文前2碼 / 英文前5碼）
-  function matchVendorSmart(vendorName, keyword) {
-    if (!keyword) return false;
-    const vendor = String(vendorName ?? "").trim();
-    const key = String(keyword ?? "").trim();
-    if (!vendor || !key) return false;
-
-    if (hasChinese(key)) return vendor.startsWith(key.slice(0, 2));
-    return vendor.toUpperCase().startsWith(key.toUpperCase().slice(0, 5));
-  }
-
-  function getUniqueVendors() {
-    return [...new Set(rawData.map(x => x.廠商))];
-  }
-
-  function showVendorAutocomplete(keyword) {
-    autocompleteBox.innerHTML = "";
-    const kw = String(keyword || "").trim();
-    if (!kw) return (autocompleteBox.style.display = "none");
-
-    let vendors = getUniqueVendors().filter(v => matchVendorSmart(v, kw));
-    vendors.sort((a, b) => Number(FAVORITE_VENDORS.includes(b)) - Number(FAVORITE_VENDORS.includes(a)));
-    vendors = vendors.slice(0, 12);
-
-    if (!vendors.length) return (autocompleteBox.style.display = "none");
-
-    for (const vendor of vendors) {
-      const div = document.createElement("div");
-      div.className = "autocomplete-item";
-      const isFav = FAVORITE_VENDORS.includes(vendor);
-
-      div.innerHTML = `
-        <span class="autocomplete-type">【廠商】</span>
-        ${isFav ? '<span class="autocomplete-star">⭐</span>' : ''}
-        <span>${vendor}</span>
-      `;
-
-      div.addEventListener("click", () => {
-        searchInput.value = vendor;
-        autocompleteBox.style.display = "none";
-        applyFilter();
-      });
-
-      autocompleteBox.appendChild(div);
-    }
-    autocompleteBox.style.display = "block";
-  }
-
-  async function loadData() {
-    try {
-      const resp = await fetch("inventory.json");
-      const data = await resp.json();
-
-      const mapped = data.map((x, idx) => ({
-        id: idx,
-        廠商: x["廠商"],
-        藥代: x["藥代"],
-        藥品: x["藥品"],
-        月用量: Number(x["月用量"]) || 0,
-        庫存量: null,
-        需採購: false
-      }));
-
-      rawData = mergeSameItems(mapped);
-      populateVendors();
-      applyFilter();
-    } catch (err) {
-      alert("讀取 inventory.json 失敗，請確認檔案存在且 JSON 格式正確！");
-      console.error(err);
-    }
-  }
-
-  function populateVendors() {
-  const keys = new Set(rawData.map(item => vendorKey(item.廠商)));
-  vendorSelect.innerHTML = '<option value="">全部</option>';
-
-  const arr = [...keys].filter(Boolean);
-
-  // ✅ 先中文再英文：中文(key不是A-Z開頭)排前面，英文排後面
-  arr.sort((a, b) => {
-    const aEng = /^[A-Z]/.test(a);   // 英文代碼(5碼) → true
-    const bEng = /^[A-Z]/.test(b);
-
-    if (aEng !== bEng) return aEng - bEng;  // false(中文) 先，true(英文) 後
-    return a.localeCompare(b);             // 同類別再做字母排序
-  });
-
-  arr.forEach(key => {
-    const opt = document.createElement("option");
-    opt.value = key;
-    opt.textContent = /^[A-Z]/.test(key)
-      ? `${key}（英文前5碼）`
-      : `${key}（中文前2碼）`;
-    vendorSelect.appendChild(opt);
-  });
-}
-
-
-  // ✅ 統一一支篩選（applyFilter / 更新統計都用它）
-  function getBaseFilteredData() {
-    const vendor = vendorSelect.value;
-    const kw = searchInput.value.trim();
-    const kwLower = kw.toLowerCase();
-
-    return rawData.filter(item => {
-      const matchVendorDrop = vendor ? vendorKey(item.廠商) === vendor : true;
-
-      const drugName = String(item.藥品 || "").toLowerCase();
-      const matchKeyword = kw
-        ? (
-            matchDrugCodePrefix5(item.藥代, kw) ||
-            matchVendorSmart(item.廠商, kw) ||
-            drugName.includes(kwLower)
-          )
-        : true;
-
-      return matchVendorDrop && matchKeyword;
+  function populateVendors(){
+    const keys=[...new Set(rawData.map(x=>vendorKey(x.廠商)))].filter(Boolean);
+    keys.sort((a,b)=>{
+      const ae=/^[A-Z]/.test(a), be=/^[A-Z]/.test(b);
+      if(ae!==be) return ae-be;  // 中文先
+      return a.localeCompare(b);
+    });
+    $("vendorSelect").innerHTML='<option value="">全部</option>';
+    keys.forEach(k=>{
+      const o=document.createElement("option");
+      o.value=k;
+      o.textContent=/^[A-Z]/.test(k)?`${k}（英文前5碼）`:`${k}（中文前2碼）`;
+      $("vendorSelect").appendChild(o);
     });
   }
 
-  function applyFilter() {
-    const needOnly = $("needBuyOnly").checked;
-    const baseData = getBaseFilteredData();
-    viewData = needOnly ? baseData.filter(x => x.需採購) : baseData;
+  function filterData(){
+    const vSel=$("vendorSelect").value;
+    const kw=$("searchInput").value.trim();
+    const need=$("needBuyOnly").checked;
 
-    renderTable();
-    updateStats(baseData);
+    let base=rawData.filter(x=>{
+      if(vSel && vendorKey(x.廠商)!==vSel) return false;
+      if(!kw) return true;
+      return x.藥代.startsWith(kw.slice(0,5))
+        || (hasZh(kw)?x.廠商.startsWith(kw.slice(0,2)):x.廠商.toUpperCase().startsWith(kw.toUpperCase().slice(0,5)))
+        || x.藥品.includes(kw);
+    });
+
+    viewData=need?base.filter(x=>x.需採購):base;
+    render(base);
   }
 
-  function renderTable() {
-    const tbody = $("drugBody");
-    tbody.innerHTML = "";
-
-    for (const item of viewData) {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${item.廠商}</td>
-        <td>${item.藥代}</td>
-        <td>${item.藥品}</td>
-        <td>${item.月用量}</td>
-        <td><input type="number" min="0" class="stock-input" value="${item.庫存量 ?? ""}" placeholder="輸入"></td>
-        <td class="status-cell"></td>
-      `;
-
-      const input = tr.querySelector("input");
-      input.addEventListener("input", () => {
-        const v = input.value === "" ? null : Number(input.value);
-        item.庫存量 = v;
-        item.需採購 = (v != null) && (item.月用量 > v);
-        updateRowStatus(tr, item);
-        updateStats(getBaseFilteredData());
-      });
-
-      tbody.appendChild(tr);
-      updateRowStatus(tr, item);
-    }
+  function render(base){
+    $("drugBody").innerHTML="";
+    viewData.forEach(x=>{
+      const tr=document.createElement("tr");
+      tr.innerHTML=`<td>${x.廠商}</td><td>${x.藥代}</td><td>${x.藥品}</td><td>${x.月用量}</td>
+        <td><input type="number" value="${x.庫存量??""}"></td><td></td>`;
+      const inp=tr.querySelector("input");
+      const td=tr.lastChild;
+      inp.oninput=()=>{
+        x.庫存量=inp.value===""?null:+inp.value;
+        x.需採購=x.庫存量!=null && x.月用量>x.庫存量;
+        td.innerHTML=x.庫存量==null?"未輸入":x.需採購?"需採購":"庫存足夠";
+        renderStats(base);
+      };
+      $("drugBody").appendChild(tr);
+    });
+    renderStats(base);
   }
 
-  function updateRowStatus(tr, item) {
-    const td = tr.querySelector(".status-cell");
-    if (item.庫存量 == null) td.innerHTML = '<span class="status-tag status-empty">未輸入</span>';
-    else if (item.需採購) td.innerHTML = '<span class="status-tag status-buy">需採購</span>';
-    else td.innerHTML = '<span class="status-tag status-ok">庫存足夠</span>';
-  }
+  function renderStats(base){
+    const total=base.length;
+    const need=base.filter(x=>x.需採購).length;
+    const ok=base.filter(x=>x.庫存量!=null&&!x.需採購).length;
+    $("totalCount").textContent=`共 ${total} 筆`;
+    $("needBuyCount").textContent=`需採購 ${need} 筆`;
+    $("okCount").textContent=`庫存足夠 ${ok} 筆`;
 
-  function updateStats(baseData) {
-    const total = baseData.length;
-    const need  = baseData.filter(x => x.庫存量 != null && x.需採購).length;
-    const ok    = baseData.filter(x => x.庫存量 != null && !x.需採購).length;
-
-    $("totalCount").textContent = `共 ${total} 筆`;
-    $("needBuyCount").textContent = `需採購 ${need} 筆`;
-    $("okCount").textContent = `庫存足夠 ${ok} 筆`;
-
-    const ctx = $("chart").getContext("2d");
-    if (chartInstance) chartInstance.destroy();
-
-    chartInstance = new Chart(ctx, {
-      type: "pie",
-      data: {
-        labels: ["需採購", "庫存足夠"],
-        datasets: [{
-          data: [need, ok],
-          backgroundColor: ["#ef4444", "#10b981"]
-        }]
-      },
-      options: { plugins: { legend: { position: "bottom" } } }
+    if(chart) chart.destroy();
+    chart=new Chart($("chart"),{
+      type:"pie",
+      data:{labels:["需採購","庫存足夠"],datasets:[{data:[need,ok]}]},
     });
   }
 
-  // ====== Events ======
-  $("searchBtn").addEventListener("click", applyFilter);
-  $("resetBtn").addEventListener("click", () => {
-    vendorSelect.value = "";
-    searchInput.value = "";
-    $("needBuyOnly").checked = false;
-    autocompleteBox.style.display = "none";
-    applyFilter();
-  });
-  vendorSelect.addEventListener("change", applyFilter);
-  $("needBuyOnly").addEventListener("change", applyFilter);
+  async function load(){
+    const r=await fetch("inventory.json");
+    rawData=(await r.json()).map(x=>({...x,庫存量:null,需採購:false}));
+    populateVendors();
+    filterData();
+  }
 
-  searchInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      autocompleteBox.style.display = "none";
-      applyFilter();
-    }
-  });
-  searchInput.addEventListener("input", () => showVendorAutocomplete(searchInput.value));
+  $("searchBtn").onclick=filterData;
+  $("resetBtn").onclick=()=>{ $("vendorSelect").value="";$("searchInput").value="";$("needBuyOnly").checked=false;filterData(); };
+  $("vendorSelect").onchange=filterData;
+  $("needBuyOnly").onchange=filterData;
+  $("emergencyBtn").onclick=()=>$("emergencyModal").style.display="flex";
 
-  document.addEventListener("click", (e) => {
-    if (!autocompleteBox.contains(e.target) && e.target !== searchInput) {
-      autocompleteBox.style.display = "none";
-    }
-  });
-
-  $("emergencyBtn").addEventListener("click", () => $("emergencyModal").style.display = "flex");
-  $("closeModal").addEventListener("click", () => $("emergencyModal").style.display = "none");
-  $("emergencyModal").addEventListener("click", (e) => {
-    if (e.target.id === "emergencyModal") $("emergencyModal").style.display = "none";
-  });
-
-  loadData();
+  load();
 })();
 </script>
 </body>
