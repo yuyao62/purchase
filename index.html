@@ -641,17 +641,28 @@ document.addEventListener("touchstart", ()=>{}, {passive:true});
   });
 
   $("resetBtn").addEventListener("click", ()=>{
+    // ✅ NEW：防誤按確認 + 重置＝全部歸零（含庫存/localStorage）
+    const ok = confirm(
+      "⚠️ 確定要【全部重置】嗎？\n\n" +
+      "這個動作會：\n" +
+      "• 清空所有庫存輸入\n" +
+      "• 清除需採購判斷\n" +
+      "• 統計與圖表歸零\n" +
+      "• 清除本機保存（無法復原）"
+    );
+    if(!ok) return;
+
     $("vendorSelect").value="";
     $("searchInput").value="";
     $("needBuyOnly").checked=false;
 
-    // ✅ NEW: Reset = 全部歸零（含庫存＆需採購狀態）
+    // 清空庫存與狀態
     rawData.forEach(x=>{
       x.庫存量 = null;
       x.需採購 = false;
     });
 
-    // ✅ NEW: 清掉 localStorage，避免重整/下次開啟又復活
+    // 清掉 localStorage
     localStorage.removeItem(STOCK_KEY);
 
     closeBuyScreen();
