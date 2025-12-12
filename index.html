@@ -68,16 +68,15 @@
     .tag-buy{ background:#fee2e2; color:#b91c1c; }
     .tag-ok{ background:#dcfce7; color:#166534; }
 
-    /* ===== ✅ 手機：卡片版（左右分欄） ===== */
+    /* ===== ✅ 手機：卡片版（右欄：庫存+狀態同一行） ===== */
     @media (max-width: 520px){
       .app{ margin:12px; padding:16px; }
 
-      /* 上方：廠商/搜尋排版（搜尋更大） */
+      /* 上方：廠商/搜尋（搜尋更大） */
       .row.row-top{
         display:grid;
         grid-template-columns: 70px 1fr;
-        column-gap:10px;
-        row-gap:10px;
+        gap:10px;
         align-items:center;
       }
       .row.row-top .vendor-wrap,
@@ -98,97 +97,85 @@
       .row.row-actions{ gap:10px; }
       .row.row-actions button{ padding:10px 14px; }
 
+      /* 卡片列表 */
       .table-wrap{ overflow: visible; }
       table{ border-collapse: separate; border-spacing: 0 10px; }
       thead{ display:none; }
 
       tbody, tr{ width:100%; }
 
-      /* ✅ 關鍵：tr 變成 grid，左右兩欄 */
       tr{
         display:grid;
-        grid-template-columns: 1fr 150px;  /* 左欄彈性、右欄固定 */
-        grid-template-rows: auto auto auto;
+        grid-template-columns: 1fr 160px;  /* 左資訊 / 右操作 */
         grid-template-areas:
-          "code  stock"
-          "drug  stock"
-          "usage status";
-        gap: 6px 10px;
+          "code  right"
+          "drug  right"
+          "usage right";
+        gap: 6px 12px;
 
         background:#fff;
         border-radius:16px;
         box-shadow: 0 10px 24px rgba(0,0,0,.08);
-        overflow:hidden;
-        padding: 10px 12px;
+        padding: 12px;
       }
 
-      /* td 在手機不要 block，交給 grid */
-      td{ padding:0; margin:0; white-space:normal; }
+      td{
+        padding:0;
+        margin:0;
+        white-space:normal;
+      }
 
+      /* 左欄 */
       td.col-code{
         grid-area: code;
         font-weight:900;
         font-size:15px;
       }
-
       td.col-drug{
         grid-area: drug;
-        color:#111827;
         font-weight:700;
         line-height:1.35;
-
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
+        display:-webkit-box;
+        -webkit-line-clamp:2;
+        -webkit-box-orient:vertical;
         overflow:hidden;
       }
-
       td.col-usage{
         grid-area: usage;
-        color:#374151;
         font-weight:800;
+        color:#374151;
       }
 
-      /* 右欄：庫存 */
+      /* 右欄：庫存 + 狀態（同一行） */
       td.col-stock{
-        grid-area: stock;
+        grid-area: right;
         display:flex;
-        flex-direction:column;
-        align-items:stretch;
-        gap:6px;
-        justify-content:flex-start;
+        align-items:center;
+        justify-content:flex-end;
+        gap:8px;
       }
-      td.col-stock::before{
-        content:"庫存";
-        font-weight:900;
-        color:#111827;
-      }
+      td.col-stock::before{ content:none; } /* 移除桌機 before */
+
       td.col-stock input[type="number"]{
-        width:100%;
+        width:84px;
         font-size:16px;
-        padding:10px 10px;
-        border-radius:14px;
+        padding:8px 8px;
+        border-radius:12px;
         text-align:center;
+        flex-shrink:0;
       }
 
-      /* 右欄：狀態（太長省略） */
-      td.col-status{
-        grid-area: status;
-        display:flex;
-        flex-direction:column;
-        align-items:flex-start;
-        gap:6px;
-      }
-      td.col-status::before{
-        content:"狀態";
-        font-weight:900;
-        color:#111827;
-      }
-      td.col-status .tag{
-        max-width: 150px;
+      /* 狀態不要獨立一欄（會在 JS 內塞到 col-stock） */
+      td.col-status{ display:none; }
+
+      /* 狀態省略 */
+      td.col-stock .tag{
+        max-width:60px;
         overflow:hidden;
         text-overflow:ellipsis;
         white-space:nowrap;
+        font-size:12px;
+        padding:4px 8px;
       }
     }
 
@@ -319,14 +306,25 @@
     if(scroll) scrollToFirstResult();
   }
 
-  function setStatusCell(td, x){
-    if(x.庫存量==null){
-      td.innerHTML = `<span class="tag tag-empty">未輸入</span>`;
+  // ✅ 手機版：把狀態 tag 放到 col-stock 右邊（庫存 + 狀態同一行）
+  function setStatusUI(tr, x){
+    const stockTd = tr.querySelector(".col-stock");
+    const statusTd = tr.querySelector(".col-status");
+
+    const tagHtml = (()=>{
+      if(x.庫存量==null) return `<span class="tag tag-empty">未輸入</span>`;
+      return x.需採購 ? `<span class="tag tag-buy">需採購</span>` : `<span class="tag tag-ok">庫存足夠</span>`;
+    })();
+
+    // 桌機：狀態放 statusTd
+    if (window.matchMedia("(min-width: 521px)").matches) {
+      statusTd.innerHTML = tagHtml;
       return;
     }
-    td.innerHTML = x.需採購
-      ? `<span class="tag tag-buy">需採購</span>`
-      : `<span class="tag tag-ok">庫存足夠</span>`;
+
+    // 手機：狀態放在庫存右邊（先清掉舊的 tag）
+    stockTd.querySelectorAll(".tag").forEach(n=>n.remove());
+    stockTd.insertAdjacentHTML("beforeend", tagHtml);
   }
 
   function moveToNextStockInput(currentInput){
@@ -355,14 +353,14 @@
       `;
 
       const inp=tr.querySelector('input[type="number"]');
-      const statusTd=tr.querySelector(".col-status");
 
-      setStatusCell(statusTd, x);
+      // 初始狀態
+      setStatusUI(tr, x);
 
       inp.addEventListener("input", ()=>{
         x.庫存量 = inp.value===""?null:+inp.value;
         x.需採購 = (x.庫存量!=null) && (x.月用量 > x.庫存量);
-        setStatusCell(statusTd, x);
+        setStatusUI(tr, x);
         renderStats(base);
       });
 
@@ -451,6 +449,26 @@
   }, {passive:true});
 
   $("emergencyBtn").onclick=()=>$("emergencyModal").style.display="flex";
+
+  // ✅ 螢幕旋轉/寬度改變時，重畫一次讓狀態位置正確
+  window.addEventListener("resize", ()=>{
+    // 只重新渲染目前結果（不重算）
+    const vSel=$("vendorSelect").value;
+    const kw=$("searchInput").value.trim().toLowerCase();
+    const needOnly=$("needBuyOnly").checked;
+
+    let base=rawData.filter(x=>{
+      if(vSel && vendorKey(x.廠商)!==vSel) return false;
+      if(!kw) return true;
+      const code=String(x.藥代||"").toLowerCase();
+      const name=String(x.藥品||"").toLowerCase();
+      const vendor=String(x.廠商||"").toLowerCase();
+      return code.includes(kw) || name.includes(kw) || vendor.includes(kw);
+    });
+
+    viewData=needOnly?base.filter(x=>x.需採購):base;
+    render(base);
+  });
 
   load();
 })();
