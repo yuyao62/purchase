@@ -1,348 +1,649 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 <title>藥品採購查詢系統</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-html, body { margin:0; padding:0; width:100%; overflow-x:hidden; }
-body { background:#eef1f7; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
-body.lock { height:100vh; overflow:hidden; }
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-.app{
-  max-width:1100px;
-  margin:0 auto;
-  background:#fff;
-  padding:16px;
+<style>
+html, body { width: 100%; max-width: 100%; overflow-x: hidden; }
+* { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+body { margin: 0; background: #eef1f7; min-height: 100vh; }
+
+body.lock { overflow: hidden; height: 100vh; } /* ✅ iOS：切到需採購頁時鎖背景 */
+
+.app {
+  width: min(1100px, 100%);
+  background: #fff;
+  margin: 20px auto;
+  padding: 24px;
+  border-radius: 20px;
+  box-shadow: 0 18px 40px rgba(0,0,0,.12);
 }
 
-.row{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; align-items:center; }
-button{ padding:8px 16px; border-radius:20px; border:0; font-weight:800; }
-button.dark{ background:#111827; color:#fff; }
-button.ghost{ background:#e5e7eb; color:#111827; }
+h1 { text-align: center; margin: 0 0 6px; }
+.subtitle { text-align: center; color: #6b7280; font-size: 14px; margin-bottom: 16px; }
 
-input,select{ padding:8px 14px; border-radius:20px; border:1px solid #ccc; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 12px; }
+label { font-weight: 800; }
 
-.pill{ padding:6px 12px; border-radius:999px; font-size:13px; font-weight:900; }
-.pill.buy{ background:#fee2e2; color:#991b1b; }
-.pill.ok{ background:#dcfce7; color:#166534; }
-.pill.na{ background:#e5e7eb; color:#111827; }
+input, select {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  max-width: 100%;
+}
+button {
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: none;
+  background: #4f46e5;
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+.emergency-btn { background:#dc2626; }
+.secondary-btn { background:#111827; }
+.ghost-btn { background:#e5e7eb; color:#111827; }
 
-.table-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
-table{ width:100%; border-collapse:collapse; }
-th,td{ padding:10px 8px; font-size:14px; vertical-align:middle; }
-tr:nth-child(even){ background:#f3f4f6; }
+.pill { padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 800; }
+.pill-total { background:#dbeafe; color:#1e3a8a; }
+.pill-buy { background:#fee2e2; color:#991b1b; }
+.pill-ok { background:#dcfce7; color:#166534; }
 
-input.stock{ width:78px; font-size:16px; text-align:center; }
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: #e5e7eb; padding: 8px; position: sticky; top: 0; }
+td { padding: 6px 8px; vertical-align: middle; }
+tr:nth-child(even) td { background: #f3f4f6; }
+td.col-stock input { width: 80px; text-align: center; border-radius: 10px; }
 
-.tag{ display:inline-block; padding:4px 10px; border-radius:999px; font-weight:900; font-size:12px; }
-.tag-buy{ background:#fee2e2; color:#991b1b; }
-.tag-ok{ background:#dcfce7; color:#166534; }
-.tag-na{ background:#e5e7eb; color:#111827; }
+.tag { display:inline-block; padding:4px 10px; border-radius:999px; font-weight:800; font-size:12px; }
+.tag-empty { background:#e5e7eb; }
+.tag-buy { background:#fee2e2; color:#b91c1c; }
+.tag-ok { background:#dcfce7; color:#166534; }
 
-/* ===== 需採購頁（真切頁） ===== */
-.buy-page{
+@media (max-width: 520px){
+  .app { width: 100%; margin: 0; padding: 12px; border-radius: 0; box-shadow: none; }
+  h1 { font-size: 26px; }
+  .subtitle { font-size: 12px; }
+
+  .table-wrap { overflow: visible; }
+  table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+  thead { display: none; }
+
+  tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 120px;
+    grid-template-areas:
+      "code right"
+      "drug right"
+      "usage right";
+    gap: 4px 8px;
+    background: #fff;
+    border-radius: 14px;
+    padding: 10px;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  td { padding: 0; white-space: normal; min-width: 0; }
+  td.col-code { grid-area: code; font-weight: 900; font-size: 14px; }
+
+  td.col-drug{
+    grid-area: drug;
+    font-weight: 700;
+    line-height: 1.3;
+    overflow-wrap:anywhere;
+    word-break: break-word;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  td.col-usage { grid-area: usage; font-weight: 800; color: #374151; }
+
+  td.col-stock{
+    grid-area: right;
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:6px;
+    min-height:48px;
+    align-self:stretch;
+    min-width:0;
+    max-width:100%;
+  }
+
+  td.col-status { display:none; }
+
+  td.col-stock input{
+    width:68px;
+    max-width:100%;
+    min-height:36px;
+    font-size:16px;
+    text-align:center;
+    touch-action: manipulation;
+  }
+
+  td.col-stock .tag{
+    max-width:52px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    font-size:11px;
+    padding:4px 6px;
+  }
+
+  #searchInput{ font-size: 16px; padding: 10px 16px; }
+}
+
+/* ===== 緊急 modal ===== */
+.modal{
   display:none;
-  min-height:100vh;
+  position:fixed;
+  inset:0;
+  background:radial-gradient(circle at top,#7f1d1d,#000);
+  color:#fff;
+  justify-content:center;
+  align-items:center;
+  z-index:9999;
+}
+.modal h1{ font-size:44px; margin:0 0 16px; }
+.modal button{
+  width:min(360px, 90vw);
+  padding:14px 18px;
+  font-size:18px;
+  border-radius:14px;
+}
+
+/* ===== 需採購清單：獨立畫面（真切頁） ===== */
+.buy-screen{
+  display:none;
+  min-height: 100vh;
   background:#0b1220;
   color:#fff;
   padding:16px;
 }
-.buy-title{ font-size:22px; font-weight:900; margin:6px 0 10px; }
-.buy-sub{ color:#cbd5e1; font-size:13px; margin-bottom:12px; }
+.buy-panel{ width:min(980px, 100%); margin:0 auto; }
+.buy-head{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:10px;
+  justify-content:space-between;
+  margin-bottom:12px;
+}
+.buy-title{ font-size:22px; font-weight:900; }
+.buy-sub{ color:#cbd5e1; font-size:13px; margin-top:4px; }
+.buy-actions{ display:flex; flex-wrap:wrap; gap:10px; }
+
 .buy-card{
   background:#111827;
-  border-radius:12px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;
   padding:12px;
   margin-bottom:10px;
-  border:1px solid rgba(255,255,255,.08);
 }
-
-/* ===== 手機卡片 ===== */
-@media(max-width:600px){
-  table thead{ display:none; }
-  tr{
-    display:block;
-    background:#fff;
-    margin-bottom:10px;
-    border-radius:12px;
-    padding:12px;
-    overflow:hidden;
+.buy-row{
+  display:grid;
+  grid-template-columns:110px 1fr 120px 120px 120px;
+  gap:10px;
+  align-items:start;
+}
+.buy-row > div{ min-width:0; }
+.buy-k{ font-size:12px; color:#94a3b8; font-weight:800; }
+.buy-v{ font-size:14px; font-weight:800; overflow-wrap:anywhere; }
+.buy-pill{
+  display:inline-block;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:900;
+  background:#fecaca;
+  color:#7f1d1d;
+}
+@media (max-width: 700px){
+  .buy-row{
+    grid-template-columns:1fr 120px;
+    grid-template-areas:
+      "code need"
+      "drug need"
+      "vendor need"
+      "usage stock"
+      "suggest suggest";
   }
-  td{ display:block; padding:6px 0; }
+  .b-code{grid-area:code;}
+  .b-drug{grid-area:drug;}
+  .b-vendor{grid-area:vendor;}
+  .b-usage{grid-area:usage;}
+  .b-stock{grid-area:stock;}
+  .b-suggest{grid-area:suggest;}
+  .b-need{grid-area:need; text-align:right;}
 }
 </style>
 </head>
 
 <body>
-
-<!-- ===== 主畫面 ===== -->
-<div id="mainApp" class="app">
-  <h1 style="margin:0 0 10px;">藥品採購查詢系統</h1>
+<div class="app" id="mainApp">
+  <h1>藥品採購查詢系統</h1>
+  <div class="subtitle">廠商下拉：中文前2碼 → 英文前5碼（中文優先）</div>
 
   <div class="row">
-    <label style="display:flex; gap:8px; align-items:center; font-weight:900;">
-      <input type="checkbox" id="needBuyOnly">
-      只顯示需採購（Safari 可跳）
-    </label>
-    <button class="dark" id="openBuyBtn">需採購清單</button>
+    <label>廠商：</label>
+    <select id="vendorSelect"><option value="">全部</option></select>
   </div>
 
   <div class="row">
-    <span class="pill buy" id="buyCount">需採購 0</span>
-    <span class="pill ok" id="okCount">足夠 0</span>
-    <span class="pill na" id="naCount">未輸入 0</span>
+    <label>搜尋：</label>
+    <input id="searchInput" style="flex:1" placeholder="輸入就會自動查（藥代 / 藥名 / 廠商）">
+  </div>
+
+  <div class="row">
+    <button id="resetBtn">重置</button>
+    <button id="emergencyBtn" class="emergency-btn">緊急</button>
+    <label><input type="checkbox" id="needBuyOnly"> 只顯示需採購（勾選自動跳頁）</label>
+    <button id="openBuyScreenBtn" class="secondary-btn">需採購清單（另一畫面）</button>
+  </div>
+
+  <div class="row">
+    <span class="pill pill-total" id="totalCount"></span>
+    <span class="pill pill-buy" id="needBuyCount"></span>
+    <span class="pill pill-ok" id="okCount"></span>
   </div>
 
   <div class="table-wrap">
     <table>
       <thead>
         <tr>
-          <th>藥代</th><th>藥品</th><th>月用量</th><th>庫存</th><th>狀態</th>
+          <th>藥代</th>
+          <th>藥品</th>
+          <th>月用量</th>
+          <th>庫存</th>
+          <th>狀態</th>
         </tr>
       </thead>
       <tbody id="drugBody"></tbody>
     </table>
   </div>
+
+  <canvas id="chart" height="180"></canvas>
 </div>
 
-<!-- ===== 需採購頁（真切頁） ===== -->
-<div id="buyPage" class="buy-page">
-  <div class="row">
-    <button class="ghost" id="backBtn">← 返回主畫面</button>
-    <button class="dark" id="csvBtn">存 CSV</button>
-    <button class="dark" id="jsonBtn">存 JSON</button>
+<!-- ✅ 需採購清單：真的另一頁（主畫面會被隱藏） -->
+<div id="buyScreen" class="buy-screen">
+  <div class="buy-panel">
+    <div class="buy-head">
+      <div>
+        <div class="buy-title">🧾 需採購清單</div>
+        <div class="buy-sub" id="buyMeta"></div>
+      </div>
+      <div class="buy-actions">
+        <button id="backBtn" class="ghost-btn">返回主畫面</button>
+        <button id="saveCSVBtn" class="secondary-btn">存檔 CSV</button>
+        <button id="saveJSONBtn" class="secondary-btn">存檔 JSON</button>
+      </div>
+    </div>
+
+    <div id="buyList"></div>
   </div>
-  <div class="buy-title">🧾 需採購清單</div>
-  <div class="buy-sub" id="buyMeta"></div>
-  <div id="buyList"></div>
+</div>
+
+<!-- 緊急 -->
+<div id="emergencyModal" class="modal">
+  <div style="text-align:center; padding: 16px">
+    <h1>⚠️ 請洽店長</h1>
+    <button onclick="document.getElementById('emergencyModal').style.display='none'">我知道了</button>
+  </div>
 </div>
 
 <script>
 document.addEventListener("touchstart", ()=>{}, {passive:true});
 
-let data = [];               // 真實資料
-const STOCK_KEY = "drug_stock_v2";
+(() => {
+  let rawData = [];
+  let chart;
 
-const $ = id => document.getElementById(id);
+  const $ = id => document.getElementById(id);
 
-function loadStockMap(){
-  try { return JSON.parse(localStorage.getItem(STOCK_KEY) || "{}"); }
-  catch { return {}; }
-}
-function saveStockMap(map){
-  localStorage.setItem(STOCK_KEY, JSON.stringify(map));
-}
+  const vendorKey = v => {
+    v = String(v||"");
+    return /^[A-Za-z]/.test(v) ? v.slice(0,5).toUpperCase() : v.slice(0,2);
+  };
 
-/* ✅ 狀態判斷（修正重點）
-   - 庫存 = null/空白 → 未輸入
-   - 有庫存且月用量>庫存 → 需採購
-   - 有庫存且月用量<=庫存 → 足夠
-*/
-function computeStatus(x){
-  const u = Number(x.月用量) || 0;
-  const s = (x.庫存==="" || x.庫存===undefined) ? null : x.庫存;
-  if (s === null) return "未輸入";
-  const stock = Number(s);
-  if (!Number.isFinite(stock)) return "未輸入";
-  return (u > stock) ? "需採購" : "足夠";
-}
+  const nowStamp = () => {
+    const d = new Date();
+    const pad = n => String(n).padStart(2,"0");
+    return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`;
+  };
 
-function tagHTML(status){
-  if(status==="需採購") return `<span class="tag tag-buy">需採購</span>`;
-  if(status==="足夠")   return `<span class="tag tag-ok">足夠</span>`;
-  return `<span class="tag tag-na">未輸入</span>`;
-}
-
-function renderMain(){
-  $("drugBody").innerHTML = "";
-
-  let buy=0, ok=0, na=0;
-  const needOnly = $("needBuyOnly").checked;
-
-  data.forEach(x=>{
-    const status = computeStatus(x);
-    x._status = status;
-
-    if (status==="需採購") buy++;
-    else if (status==="足夠") ok++;
-    else na++;
-
-    if (needOnly && status!=="需採購") return;
-
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td><b>${x.藥代 ?? ""}</b></td>
-      <td>${x.藥品 ?? ""}</td>
-      <td>${x.月用量 ?? ""}</td>
-      <td><input class="stock" type="number" inputmode="numeric" value="${x.庫存 ?? ""}" placeholder=""></td>
-      <td>${tagHTML(status)}</td>
-    `;
-
-    const inp = tr.querySelector("input");
-    inp.addEventListener("input", (e)=>{
-      const v = e.target.value;
-      x.庫存 = (v==="") ? null : +v;
-
-      // 存檔到 localStorage
-      const map = loadStockMap();
-      map[String(x.藥代)] = x.庫存;
-      saveStockMap(map);
-
-      renderMain();
-      if (isBuyPageOpen()) openBuySafari(); // 需採購頁開著就同步刷新
-    });
-
-    $("drugBody").appendChild(tr);
-  });
-
-  $("buyCount").textContent = `需採購 ${buy}`;
-  $("okCount").textContent  = `足夠 ${ok}`;
-  $("naCount").textContent  = `未輸入 ${na}`;
-}
-
-/* ===== 需採購頁內容 ===== */
-function getNeedList(){
-  return data
-    .filter(x => computeStatus(x) === "需採購")
-    .map(x=>{
-      const u = Number(x.月用量)||0;
-      const s = Number(x.庫存)||0;
-      return {
-        藥代: x.藥代,
-        藥品: x.藥品,
-        月用量: u,
-        庫存: s,
-        建議採購量: Math.max(0, u - s)
-      };
-    })
-    .sort((a,b)=> b.建議採購量 - a.建議採購量);
-}
-
-function renderBuy(){
-  const list = getNeedList();
-  $("buyList").innerHTML = "";
-
-  $("buyMeta").textContent = `共 ${list.length} 筆（依建議採購量排序）`;
-
-  if(list.length===0){
-    $("buyList").innerHTML = `
-      <div class="buy-card">
-        <div style="font-weight:900; font-size:16px">目前沒有需採購項目</div>
-        <div style="color:#94a3b8; margin-top:6px">提示：庫存空白會被視為「未輸入」，不會算足夠也不會算需採購。</div>
-      </div>`;
-    return;
+  function makeTag(x){
+    if(x.庫存量==null) return '<span class="tag tag-empty">未輸入</span>';
+    return x.需採購
+      ? '<span class="tag tag-buy">需採購</span>'
+      : '<span class="tag tag-ok">足夠</span>';
   }
 
-  list.forEach(x=>{
-    const div=document.createElement("div");
-    div.className="buy-card";
-    div.innerHTML = `
-      <div style="font-weight:900; margin-bottom:6px;"><b>${x.藥代}</b>　${x.藥品}</div>
-      <div style="color:#cbd5e1;">月用量：${x.月用量}　｜　庫存：${x.庫存}</div>
-      <div style="margin-top:6px; font-weight:900;">建議採購：${x.建議採購量}</div>
-    `;
-    $("buyList").appendChild(div);
-  });
-}
+  function renderStats(list){
+    const total = list.length;
+    const need = list.filter(x=>x.需採購).length;
+    const ok = list.filter(x=>x.庫存量!=null && !x.需採購).length;
 
-/* ===== Safari 真切頁（強制重繪） ===== */
-function isBuyPageOpen(){ return $("buyPage").style.display==="block"; }
+    $("totalCount").textContent = `共 ${total} 筆`;
+    $("needBuyCount").textContent = `需採購 ${need} 筆`;
+    $("okCount").textContent = `庫存足夠 ${ok} 筆`;
 
-function openBuySafari(){
-  renderBuy();
+    if(chart) chart.destroy();
+    chart = new Chart($("chart"),{
+      type:"pie",
+      data:{labels:["需採購","庫存足夠"],datasets:[{data:[need,ok]}]},
+      options:{responsive:true, maintainAspectRatio:false}
+    });
+  }
 
-  $("mainApp").style.display = "none";
-  $("buyPage").style.display = "block";
+  function render(list){
+    $("drugBody").innerHTML = "";
+    list.forEach(x=>{
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td class="col-code">${x.藥代}</td>
+        <td class="col-drug">${x.藥品}</td>
+        <td class="col-usage">${x.月用量}</td>
+        <td class="col-stock">
+          <input type="number" inputmode="numeric" value="${x.庫存量??""}">
+          ${makeTag(x)}
+        </td>
+        <td class="col-status"></td>
+      `;
 
-  // 🔥 iOS Safari 強制重繪（關鍵）
-  $("buyPage").style.webkitTransform = "translateZ(0)";
-  $("buyPage").offsetHeight; // force reflow
-  $("buyPage").style.webkitTransform = "";
+      const inp = tr.querySelector("input");
+      inp.addEventListener("input", ()=>{
+        x.庫存量 = inp.value==="" ? null : +inp.value;
+        x.需採購 = x.庫存量!=null && (Number(x.月用量)||0) > x.庫存量;
+        tr.querySelector(".tag").outerHTML = makeTag(x);
 
-  document.body.classList.add("lock");
-  window.scrollTo(0,0);
-}
-function closeBuySafari(){
-  $("buyPage").style.display = "none";
-  $("mainApp").style.display = "block";
-  document.body.classList.remove("lock");
-  window.scrollTo(0,0);
-}
+        persistStock();
+        renderStats(list);
 
-/* ===== 下載 ===== */
-function download(name, mime, content){
-  const blob = new Blob([content], {type:mime});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = name;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
+        // ✅ 在需採購頁時，輸入也會同步更新清單
+        if (isBuyScreenOpen()) openBuyScreen();
+      });
 
-/* ===== Safari checkbox：change + touchend 雙保險 ===== */
-function onNeedBuyToggle(){
-  renderMain();
-  if ($("needBuyOnly").checked) openBuySafari();
-  else closeBuySafari();
-}
-$("needBuyOnly").addEventListener("change", onNeedBuyToggle);
-$("needBuyOnly").addEventListener("touchend", ()=>setTimeout(onNeedBuyToggle, 0));
+      $("drugBody").appendChild(tr);
+    });
+    renderStats(list);
+  }
 
-/* ===== 按鈕 ===== */
-$("openBuyBtn").addEventListener("click", ()=>{
-  $("needBuyOnly").checked = true; // 同步狀態
-  openBuySafari();
-});
-$("backBtn").addEventListener("click", ()=>{
-  $("needBuyOnly").checked = false;
-  closeBuySafari();
-  renderMain();
-});
+  function currentFilteredList(){
+    const kw = $("searchInput").value.toLowerCase();
+    const vSel = $("vendorSelect").value;
+    const needOnly = $("needBuyOnly").checked;
 
-$("csvBtn").addEventListener("click", ()=>{
-  const list = getNeedList();
-  const header = ["藥代","藥品","月用量","庫存","建議採購量"];
-  const esc = v => {
-    const s = (v==null) ? "" : String(v);
-    return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
-  };
-  const rows = [header.join(",")].concat(list.map(x=>header.map(k=>esc(x[k])).join(",")));
-  download(`需採購清單.csv`, "text/csv;charset=utf-8", rows.join("\n"));
-});
+    let list = rawData.filter(x=>{
+      if(vSel && vendorKey(x.廠商)!==vSel) return false;
+      if(!kw) return true;
+      return (
+        String(x.藥代).toLowerCase().includes(kw) ||
+        String(x.藥品).toLowerCase().includes(kw) ||
+        String(x.廠商).toLowerCase().includes(kw)
+      );
+    });
 
-$("jsonBtn").addEventListener("click", ()=>{
-  const list = getNeedList();
-  download(`需採購清單.json`, "application/json;charset=utf-8", JSON.stringify(list,null,2));
-});
+    if(needOnly) list = list.filter(x=>x.需採購);
+    return list;
+  }
 
-/* ===== 載入資料：inventory.json（失敗就用示範資料） ===== */
-async function boot(){
-  let base = [
-    {藥代:"A001",藥品:"AMOXICILLIN",月用量:100},
-    {藥代:"B002",藥品:"PARACETAMOL",月用量:80},
-  ];
+  function filter(){
+    const list = currentFilteredList();
+    render(list);
+    const first = $("drugBody").querySelector("tr");
+    if(first) first.scrollIntoView({behavior:"smooth", block:"start"});
+  }
 
-  try{
-    const r = await fetch("inventory.json", {cache:"no-store"});
-    if(r.ok){
-      base = await r.json();
+  /* ========= 真切頁：顯示/隱藏 ========= */
+  function isBuyScreenOpen(){
+    return $("buyScreen").style.display === "block";
+  }
+
+  function showBuyPage(){
+    $("mainApp").style.display = "none";     // ✅ 主畫面隱藏（真正切頁）
+    $("buyScreen").style.display = "block";  // ✅ 需採購頁顯示
+    document.body.classList.add("lock");
+
+    // ✅ iOS：強制回到最上面
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }
+
+  function showMainPage(){
+    $("buyScreen").style.display = "none";
+    $("mainApp").style.display = "block";
+    document.body.classList.remove("lock");
+
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }
+
+  /* ========= 需採購清單內容 ========= */
+  function getNeedBuyList(){
+    const kw = $("searchInput").value.toLowerCase();
+    const vSel = $("vendorSelect").value;
+
+    return rawData
+      .filter(x=>{
+        if(vSel && vendorKey(x.廠商)!==vSel) return false;
+        if(kw){
+          const hit =
+            String(x.藥代).toLowerCase().includes(kw) ||
+            String(x.藥品).toLowerCase().includes(kw) ||
+            String(x.廠商).toLowerCase().includes(kw);
+          if(!hit) return false;
+        }
+        return x.需採購;
+      })
+      .map(x=>{
+        const stock = (x.庫存量==null) ? 0 : x.庫存量;
+        const suggest = Math.max(0, (Number(x.月用量)||0) - Number(stock||0));
+        return {
+          藥代: x.藥代,
+          藥品: x.藥品,
+          廠商: x.廠商,
+          月用量: Number(x.月用量)||0,
+          庫存量: x.庫存量,
+          建議採購量: suggest
+        };
+      })
+      .sort((a,b)=> (b.建議採購量 - a.建議採購量));
+  }
+
+  function openBuyScreen(){
+    const list = getNeedBuyList();
+    showBuyPage();
+
+    const vSel = $("vendorSelect").value || "全部";
+    const kw = $("searchInput").value.trim() || "（無）";
+    $("buyMeta").textContent = `篩選：廠商 ${vSel}｜關鍵字 ${kw}｜共 ${list.length} 筆（依建議採購量排序）`;
+
+    const wrap = $("buyList");
+    wrap.innerHTML = "";
+
+    if(list.length === 0){
+      const empty = document.createElement("div");
+      empty.className = "buy-card";
+      empty.innerHTML = `<div style="font-weight:900; font-size:16px">目前沒有需採購項目</div>
+                         <div style="color:#94a3b8; margin-top:6px">請先在主畫面輸入庫存，系統才會判斷需採購。</div>`;
+      wrap.appendChild(empty);
+      return;
     }
-  }catch(e){}
 
-  // 還原庫存
-  const map = loadStockMap();
-  data = base.map(x=>({
-    ...x,
-    庫存: (map[String(x.藥代)]===undefined) ? null : map[String(x.藥代)]
-  }));
+    list.forEach(x=>{
+      const card = document.createElement("div");
+      card.className = "buy-card";
+      card.innerHTML = `
+        <div class="buy-row">
+          <div class="b-code">
+            <div class="buy-k">藥代</div>
+            <div class="buy-v">${x.藥代}</div>
+          </div>
 
-  renderMain();
-}
-boot();
+          <div class="b-drug">
+            <div class="buy-k">藥品</div>
+            <div class="buy-v">${x.藥品}</div>
+          </div>
+
+          <div class="b-usage">
+            <div class="buy-k">月用量</div>
+            <div class="buy-v">${x.月用量}</div>
+          </div>
+
+          <div class="b-stock">
+            <div class="buy-k">庫存</div>
+            <div class="buy-v">${x.庫存量==null ? "未輸入" : x.庫存量}</div>
+          </div>
+
+          <div class="b-need">
+            <div class="buy-k">狀態</div>
+            <div class="buy-v"><span class="buy-pill">需採購</span></div>
+          </div>
+
+          <div class="b-vendor">
+            <div class="buy-k">廠商</div>
+            <div class="buy-v">${x.廠商}</div>
+          </div>
+
+          <div class="b-suggest">
+            <div class="buy-k">建議採購量</div>
+            <div class="buy-v">${x.建議採購量}</div>
+          </div>
+        </div>
+      `;
+      wrap.appendChild(card);
+    });
+  }
+
+  function closeBuyScreen(){
+    showMainPage();
+  }
+
+  function downloadFile(filename, mime, content){
+    const blob = new Blob([content], {type:mime});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function exportNeedBuyCSV(){
+    const list = getNeedBuyList();
+    const header = ["藥代","藥品","廠商","月用量","庫存量","建議採購量"];
+    const esc = v => {
+      const s = (v==null) ? "" : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
+    };
+    const rows = [header.join(",")].concat(
+      list.map(x=> header.map(k=>esc(x[k])).join(","))
+    );
+    downloadFile(`需採購清單_${nowStamp()}.csv`, "text/csv;charset=utf-8", rows.join("\n"));
+  }
+
+  function exportNeedBuyJSON(){
+    const list = getNeedBuyList();
+    downloadFile(`需採購清單_${nowStamp()}.json`, "application/json;charset=utf-8", JSON.stringify(list, null, 2));
+  }
+
+  /* ========= 庫存保存 / 還原 ========= */
+  const STOCK_KEY = "drug_stock_v1";
+  function persistStock(){
+    const obj = {};
+    rawData.forEach(x=>{ obj[String(x.藥代)] = x.庫存量; });
+    localStorage.setItem(STOCK_KEY, JSON.stringify(obj));
+  }
+  function restoreStock(){
+    try{
+      const obj = JSON.parse(localStorage.getItem(STOCK_KEY) || "{}");
+      rawData = rawData.map(x=>{
+        const v = obj[String(x.藥代)];
+        const stock = (v===null || v===undefined || v==="") ? null : Number(v);
+        const need = (stock!=null) && (Number(x.月用量)||0) > stock;
+        return {...x, 庫存量: stock, 需採購: need};
+      });
+    }catch(e){}
+  }
+
+  async function load(){
+    const r = await fetch("inventory.json");
+    rawData = (await r.json()).map(x=>({...x,庫存量:null,需採購:false}));
+    restoreStock();
+
+    [...new Set(rawData.map(x=>vendorKey(x.廠商)))].forEach(v=>{
+      const o = document.createElement("option");
+      o.value = v;
+      o.textContent = v;
+      $("vendorSelect").appendChild(o);
+    });
+
+    filter();
+  }
+
+  /* ========= 事件 ========= */
+  $("searchInput").addEventListener("input", ()=>{
+    clearTimeout(window._t);
+    window._t = setTimeout(()=>{
+      filter();
+      if ($("needBuyOnly").checked) openBuyScreen();
+    }, 200);
+  });
+
+  $("vendorSelect").addEventListener("change", ()=>{
+    filter();
+    if ($("needBuyOnly").checked) openBuyScreen();
+  });
+
+  // ✅ 勾選即切頁 / 取消即回主畫面
+  $("needBuyOnly").addEventListener("change", ()=>{
+    filter();
+    if ($("needBuyOnly").checked) openBuyScreen();
+    else closeBuyScreen();
+  });
+
+  $("resetBtn").addEventListener("click", ()=>{
+    $("vendorSelect").value="";
+    $("searchInput").value="";
+    $("needBuyOnly").checked=false;
+    closeBuyScreen();
+    filter();
+  });
+
+  $("emergencyBtn").addEventListener("click", ()=>{
+    $("emergencyModal").style.display="flex";
+  });
+
+  // 手動開啟仍保留
+  $("openBuyScreenBtn").addEventListener("click", ()=>{
+    $("needBuyOnly").checked = true; // ✅ 同步勾選狀態
+    openBuyScreen();
+  });
+
+  $("backBtn").addEventListener("click", ()=>{
+    $("needBuyOnly").checked = false; // ✅ 避免回去又自動跳
+    closeBuyScreen();
+    filter();
+  });
+
+  $("saveCSVBtn").addEventListener("click", exportNeedBuyCSV);
+  $("saveJSONBtn").addEventListener("click", exportNeedBuyJSON);
+
+  load();
+})();
 </script>
 </body>
 </html>
