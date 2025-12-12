@@ -9,7 +9,16 @@
   <style>
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
     body { margin: 0; background: #eef1f7; display: flex; justify-content: center; min-height: 100vh; }
-    .app { width: min(1100px, 100%); background: #fff; margin: 20px; padding: 24px; border-radius: 20px; box-shadow: 0 18px 40px rgba(0,0,0,.12); }
+
+    .app {
+      width: min(1100px, 100%);
+      background: #fff;
+      margin: 20px;
+      padding: 24px;
+      border-radius: 20px;
+      box-shadow: 0 18px 40px rgba(0,0,0,.12);
+    }
+
     h1 { text-align: center; margin-bottom: 6px; }
     .subtitle { text-align: center; color: #6b7280; font-size: 14px; margin-bottom: 20px; }
 
@@ -45,10 +54,69 @@
     .pill-buy { background:#fee2e2; color:#991b1b; }
     .pill-ok { background:#dcfce7; color:#166534; }
 
-    table { width:100%; border-collapse:collapse; font-size:13px; }
-    th { background:#e5e7eb; padding:8px; position:sticky; top:0; }
-    td { padding:6px 8px; }
+    /* ===== 表格 ===== */
+    .table-wrap{
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+    }
+
+    table {
+      width:100%;
+      border-collapse:collapse;
+      font-size:13px;
+      min-width: 760px; /* 手機時保證欄位不被壓扁 */
+    }
+
+    th {
+      background:#e5e7eb;
+      padding:8px;
+      position:sticky;
+      top:0;
+      white-space:nowrap;
+    }
+
+    td {
+      padding:6px 8px;
+      white-space:nowrap;
+      vertical-align: middle;
+    }
+
     tr:nth-child(even) td { background:#f3f4f6; }
+
+    /* ✅ 庫存欄：固定寬度 + 置中 */
+    th.col-stock,
+    td.col-stock{
+      width: 110px;
+      min-width: 110px;
+      max-width: 110px;
+      text-align: center;
+    }
+
+    td.col-stock{
+      padding: 4px;
+    }
+
+    td.col-stock input[type="number"]{
+      width: 80px;
+      text-align: center;
+      padding: 6px 8px;
+      border-radius: 10px;
+      font-size: 13px;
+    }
+
+    /* 手機再縮一點 */
+    @media (max-width: 420px){
+      th.col-stock,
+      td.col-stock{
+        width: 90px;
+        min-width: 90px;
+        max-width: 90px;
+      }
+      td.col-stock input[type="number"]{
+        width: 64px;
+        font-size: 12px;
+      }
+    }
 
     .status-tag { padding:4px 8px; border-radius:999px; font-size:12px; font-weight:800; }
     .status-empty { background:#e5e7eb; }
@@ -60,6 +128,7 @@
       border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.15);
       max-height:240px; overflow:auto; display:none; z-index:999;
     }
+
     .autocomplete-item { padding:10px 14px; cursor:pointer; }
     .autocomplete-item:hover { background:#eef2ff; }
 
@@ -99,12 +168,21 @@
     <span class="pill pill-ok" id="okCount"></span>
   </div>
 
-  <table>
-    <thead>
-      <tr><th>廠商</th><th>藥代</th><th>藥品</th><th>月用量</th><th>庫存</th><th>狀態</th></tr>
-    </thead>
-    <tbody id="drugBody"></tbody>
-  </table>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>廠商</th>
+          <th>藥代</th>
+          <th>藥品</th>
+          <th>月用量</th>
+          <th class="col-stock">庫存</th>
+          <th>狀態</th>
+        </tr>
+      </thead>
+      <tbody id="drugBody"></tbody>
+    </table>
+  </div>
 
   <canvas id="chart" height="180"></canvas>
 </div>
@@ -119,7 +197,6 @@
 <script>
 (() => {
   let rawData=[], viewData=[], chart;
-
   const $=id=>document.getElementById(id);
   const isEng=s=>/^[A-Za-z]/.test(s);
   const hasZh=s=>/[\u4e00-\u9fff]/.test(s);
@@ -133,7 +210,7 @@
     const keys=[...new Set(rawData.map(x=>vendorKey(x.廠商)))].filter(Boolean);
     keys.sort((a,b)=>{
       const ae=/^[A-Z]/.test(a), be=/^[A-Z]/.test(b);
-      if(ae!==be) return ae-be;  // 中文先
+      if(ae!==be) return ae-be;
       return a.localeCompare(b);
     });
     $("vendorSelect").innerHTML='<option value="">全部</option>';
@@ -166,14 +243,20 @@
     $("drugBody").innerHTML="";
     viewData.forEach(x=>{
       const tr=document.createElement("tr");
-      tr.innerHTML=`<td>${x.廠商}</td><td>${x.藥代}</td><td>${x.藥品}</td><td>${x.月用量}</td>
-        <td><input type="number" value="${x.庫存量??""}"></td><td></td>`;
+      tr.innerHTML=`
+        <td>${x.廠商}</td>
+        <td>${x.藥代}</td>
+        <td>${x.藥品}</td>
+        <td>${x.月用量}</td>
+        <td class="col-stock"><input type="number" value="${x.庫存量??""}"></td>
+        <td></td>`;
       const inp=tr.querySelector("input");
-      const td=tr.lastChild;
+      const td=tr.lastElementChild;
+
       inp.oninput=()=>{
         x.庫存量=inp.value===""?null:+inp.value;
         x.需採購=x.庫存量!=null && x.月用量>x.庫存量;
-        td.innerHTML=x.庫存量==null?"未輸入":x.需採購?"需採購":"庫存足夠";
+        td.textContent=x.庫存量==null?"未輸入":x.需採購?"需採購":"庫存足夠";
         renderStats(base);
       };
       $("drugBody").appendChild(tr);
