@@ -8,79 +8,21 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
-    * {
-      box-sizing: border-box;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-    body {
-      margin: 0;
-      padding: 0;
-      background: #eef1f7;
-      display: flex;
-      justify-content: center;
-      min-height: 100vh;
-    }
-    .app {
-      width: min(1100px, 100%);
-      background: white;
-      margin: 20px;
-      padding: 24px;
-      border-radius: 20px;
-      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
-    }
-    h1 {
-      text-align: center;
-      margin-bottom: 6px;
-    }
-    .subtitle {
-      text-align: center;
-      color: #6b7280;
-      font-size: 14px;
-      margin-bottom: 20px;
-    }
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { margin: 0; padding: 0; background: #eef1f7; display: flex; justify-content: center; min-height: 100vh; }
+    .app { width: min(1100px, 100%); background: white; margin: 20px; padding: 24px; border-radius: 20px; box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12); }
+    h1 { text-align: center; margin-bottom: 6px; }
+    .subtitle { text-align: center; color: #6b7280; font-size: 14px; margin-bottom: 20px; }
 
-    .row {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    label {
-      font-weight: 600;
-    }
+    .row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 16px; }
+    label { font-weight: 600; }
 
-    input, select {
-      padding: 8px 14px;
-      border-radius: 999px;
-      border: 1px solid #d1d5db;
-      font-size: 14px;
-      outline: none;
-    }
-    input:focus, select:focus {
-      border-color: #6366f1;
-      box-shadow: 0 0 0 1px rgba(99,102,241,0.4);
-    }
+    input, select { padding: 8px 14px; border-radius: 999px; border: 1px solid #d1d5db; font-size: 14px; outline: none; }
+    input:focus, select:focus { border-color: #6366f1; box-shadow: 0 0 0 1px rgba(99,102,241,0.4); }
 
-    button {
-      padding: 8px 18px;
-      border-radius: 999px;
-      border: none;
-      background: #4f46e5;
-      color: white;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease;
-    }
-    button:hover {
-      background: #4338ca;
-      transform: translateY(-1px);
-      box-shadow: 0 8px 18px rgba(15,23,42,0.3);
-    }
-    button:active {
-      transform: translateY(0);
-      box-shadow: none;
-    }
+    button { padding: 8px 18px; border-radius: 999px; border: none; background: #4f46e5; color: white; font-weight: 600; cursor: pointer; transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease; }
+    button:hover { background: #4338ca; transform: translateY(-1px); box-shadow: 0 8px 18px rgba(15,23,42,0.3); }
+    button:active { transform: translateY(0); box-shadow: none; }
 
     /* 🔴 緊急按鈕樣式：圓形 + 輕微閃爍 */
     .emergency-btn {
@@ -97,94 +39,45 @@
       font-weight: 800;
       letter-spacing: 2px;
     }
-    .emergency-btn:hover {
-      background: #b91c1c;
-    }
+    .emergency-btn:hover { background: #b91c1c; }
 
     @keyframes pulse-emergency {
-      0% {
-        box-shadow: 0 0 0 0 rgba(220,38,38,0.6);
-        transform: scale(1);
-      }
-      70% {
-        box-shadow: 0 0 0 14px rgba(220,38,38,0);
-        transform: scale(1.05);
-      }
-      100% {
-        box-shadow: 0 0 0 0 rgba(220,38,38,0);
-        transform: scale(1);
-      }
+      0% { box-shadow: 0 0 0 0 rgba(220,38,38,0.6); transform: scale(1); }
+      70% { box-shadow: 0 0 0 14px rgba(220,38,38,0); transform: scale(1.05); }
+      100% { box-shadow: 0 0 0 0 rgba(220,38,38,0); transform: scale(1); }
     }
 
-    .pill {
-      padding: 4px 12px;
-      border-radius: 999px;
-      font-size: 13px;
-      font-weight: 600;
-    }
+    .pill { padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; }
     .pill-total { background: #dbeafe; color: #1e3a8a; }
     .pill-buy { background: #fee2e2; color: #991b1b; }
     .pill-ok  { background: #dcfce7; color: #166534; }
 
-    .table-wrap {
-      background: #f9fafb;
-      padding: 10px;
-      max-height: 520px;
-      overflow: auto;
-      border-radius: 12px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-    }
-    th {
-      background: #e5e7eb;
-      position: sticky;
-      top: 0;
-      padding: 8px;
-      font-weight: 700;
-      z-index: 5;
-    }
-    td {
-      padding: 6px 8px;
-    }
+    .table-wrap { background: #f9fafb; padding: 10px; max-height: 520px; overflow: auto; border-radius: 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: #e5e7eb; position: sticky; top: 0; padding: 8px; font-weight: 700; z-index: 5; }
+    td { padding: 6px 8px; }
     tr:nth-child(even) td { background: #f3f4f6; }
 
-    .status-tag {
-      padding: 4px 8px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 600;
-    }
+    .status-tag { padding: 4px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; }
     .status-empty { background: #e5e7eb; color: #374151; }
     .status-buy   { background: #fee2e2; color: #b91c1c; }
     .status-ok    { background: #dcfce7; color: #166534; }
 
-    @media (max-width: 640px) {
-      table { font-size: 12px; }
-    }
+    @media (max-width: 640px) { table { font-size: 12px; } }
 
     /* ✅ 專門給「庫存量（輸入）」那欄用的輸入框 */
-    .stock-input {
-      width: 100%;
-      border-radius: 999px;
-    }
+    .stock-input { width: 100%; border-radius: 999px; }
 
     /* 📱 手機版放大庫存輸入框：字變大、變高、好點按 */
     @media (max-width: 640px) {
-      .stock-input {
-        font-size: 18px;
-        padding: 10px 16px;
-        height: 44px;
-      }
+      .stock-input { font-size: 18px; padding: 10px 16px; height: 44px; }
     }
 
     /* ===========================
        🔥 滿版緊急畫面（Modal）
     =========================== */
     .modal {
-      display: none;              /* 用 JS 控制顯示/隱藏 */
+      display: none;
       position: fixed;
       z-index: 9999;
       left: 0;
@@ -213,7 +106,7 @@
       margin-bottom: 16px;
       text-shadow: 0 0 12px rgba(0,0,0,0.8);
       letter-spacing: 4px;
-      color: #fecaca;  /* 淡紅 */
+      color: #fecaca;
     }
     .modal-text {
       font-size: clamp(40px, 9vw, 72px);
@@ -222,11 +115,7 @@
       text-shadow: 0 0 18px rgba(0,0,0,0.9);
       color: #fef2f2;
     }
-    .modal-sub {
-      font-size: clamp(16px, 3.2vw, 22px);
-      margin-bottom: 30px;
-      opacity: 0.9;
-    }
+    .modal-sub { font-size: clamp(16px, 3.2vw, 22px); margin-bottom: 30px; opacity: 0.9; }
     .modal-close {
       padding: 12px 26px;
       border-radius: 999px;
@@ -238,21 +127,16 @@
       font-weight: 700;
       box-shadow: 0 12px 30px rgba(0,0,0,0.45);
     }
-    .modal-close:hover {
-      background: #d1d5db;
-    }
+    .modal-close:hover { background: #d1d5db; }
 
-    @keyframes popIn {
-      from { transform: scale(0.9); opacity: 0; }
-      to   { transform: scale(1);   opacity: 1; }
-    }
+    @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
   </style>
 </head>
 
 <body>
 <div class="app">
   <h1>藥品採購查詢系統</h1>
-  <div class="subtitle">依廠商前兩碼分類 · 支援藥代/品名搜尋 · 庫存輸入自動判定需採購</div>
+  <div class="subtitle">依廠商前兩碼分類 · 支援藥代/品名搜尋（藥代可輸入前5碼）· 庫存輸入自動判定需採購</div>
 
   <!-- 操作列 -->
   <div class="row">
@@ -262,7 +146,7 @@
     </select>
 
     <label>搜尋：</label>
-    <input id="searchInput" type="text" placeholder="輸入藥代或品名">
+    <input id="searchInput" type="text" placeholder="輸入藥代前5碼或品名">
 
     <button id="searchBtn">查詢</button>
     <button id="resetBtn">重置</button>
@@ -328,10 +212,8 @@
   =============================== */
   function mergeSameItems(list) {
     const merged = {};
-
     list.forEach(item => {
       const key = `${item.廠商}__${item.藥代}__${item.藥品}`;
-
       if (!merged[key]) {
         merged[key] = { ...item };
         merged[key].月用量 = Number(item.月用量) || 0;
@@ -339,13 +221,20 @@
         merged[key].月用量 += Number(item.月用量) || 0;
       }
     });
-
     return Object.values(merged);
   }
 
   /* 廠商前兩碼 */
   function vendorPrefix(name) {
     return name.trim().slice(0, 2);
+  }
+
+  /* ✅ 藥代：支援「前 5 碼」比對（不分大小寫） */
+  function matchDrugCodePrefix5(drugCode, keyword) {
+    if (!keyword) return true;
+    const code = String(drugCode ?? "").trim().toUpperCase();
+    const key  = String(keyword ?? "").trim().toUpperCase().slice(0, 5);
+    return code.startsWith(key);
   }
 
   /* 載入 JSON */
@@ -368,7 +257,6 @@
 
       populateVendors();
       applyFilter();
-
     } catch (err) {
       alert("讀取 inventory.json 失敗，請確認檔案存在且 JSON 格式正確！");
       console.error(err);
@@ -393,16 +281,16 @@
   /* 篩選 */
   function applyFilter() {
     const vendor = document.getElementById("vendorSelect").value;
-    const keyword = document.getElementById("searchInput").value.trim().toLowerCase();
+    const keywordRaw = document.getElementById("searchInput").value.trim();
+    const keywordLower = keywordRaw.toLowerCase();
     const needOnly = document.getElementById("needBuyOnly").checked;
 
     const baseData = rawData.filter(item => {
       const matchVendor = vendor ? vendorPrefix(item.廠商) === vendor : true;
 
-      const drugCode = (item.藥代 || "").toLowerCase();
-      const drugName = (item.藥品 || "").toLowerCase();
-      const matchKeyword = keyword
-        ? (drugCode.includes(keyword) || drugName.includes(keyword))
+      const drugName = String(item.藥品 || "").toLowerCase();
+      const matchKeyword = keywordRaw
+        ? (matchDrugCodePrefix5(item.藥代, keywordRaw) || drugName.includes(keywordLower))
         : true;
 
       return matchVendor && matchKeyword;
@@ -461,15 +349,15 @@
   /* 重新計算統計（輸入時用） */
   function updateStatsByCurrentFilter() {
     const vendor = document.getElementById("vendorSelect").value;
-    const keyword = document.getElementById("searchInput").value.trim().toLowerCase();
+    const keywordRaw = document.getElementById("searchInput").value.trim();
+    const keywordLower = keywordRaw.toLowerCase();
 
     const baseData = rawData.filter(item => {
       const matchVendor = vendor ? vendorPrefix(item.廠商) === vendor : true;
 
-      const drugCode = (item.藥代 || "").toLowerCase();
-      const drugName = (item.藥品 || "").toLowerCase();
-      const matchKeyword = keyword
-        ? (drugCode.includes(keyword) || drugName.includes(keyword))
+      const drugName = String(item.藥品 || "").toLowerCase();
+      const matchKeyword = keywordRaw
+        ? (matchDrugCodePrefix5(item.藥代, keywordRaw) || drugName.includes(keywordLower))
         : true;
 
       return matchVendor && matchKeyword;
@@ -489,7 +377,6 @@
     document.getElementById("okCount").textContent      = `庫存足夠 ${ok} 筆`;
 
     const ctx = document.getElementById("chart").getContext("2d");
-
     if (chartInstance) chartInstance.destroy();
 
     chartInstance = new Chart(ctx, {
@@ -501,11 +388,7 @@
           backgroundColor: ["#ef4444", "#10b981"]
         }]
       },
-      options: {
-        plugins: {
-          legend: { position: "bottom" }
-        }
-      }
+      options: { plugins: { legend: { position: "bottom" } } }
     });
   }
 
