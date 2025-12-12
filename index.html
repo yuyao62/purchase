@@ -644,6 +644,16 @@ document.addEventListener("touchstart", ()=>{}, {passive:true});
     $("vendorSelect").value="";
     $("searchInput").value="";
     $("needBuyOnly").checked=false;
+
+    // ✅ NEW: Reset = 全部歸零（含庫存＆需採購狀態）
+    rawData.forEach(x=>{
+      x.庫存量 = null;
+      x.需採購 = false;
+    });
+
+    // ✅ NEW: 清掉 localStorage，避免重整/下次開啟又復活
+    localStorage.removeItem(STOCK_KEY);
+
     closeBuyScreen();
     filter();
   });
