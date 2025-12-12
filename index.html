@@ -68,29 +68,23 @@
     .tag-buy{ background:#fee2e2; color:#b91c1c; }
     .tag-ok{ background:#dcfce7; color:#166534; }
 
-    /* ===== ✅ 手機：卡片版（無左右滑） ===== */
+    /* ===== ✅ 手機：卡片版（左右分欄） ===== */
     @media (max-width: 520px){
       .app{ margin:12px; padding:16px; }
 
-      /* ✅ 讓「廠商 + 搜尋」同一行，且搜尋更大 */
+      /* 上方：廠商/搜尋排版（搜尋更大） */
       .row.row-top{
         display:grid;
-        grid-template-columns: 70px 1fr; /* label + 控制項 */
+        grid-template-columns: 70px 1fr;
         column-gap:10px;
         row-gap:10px;
         align-items:center;
       }
-      .row.row-top .vendor-wrap{
-        grid-column: 1 / -1;
-        display:grid;
-        grid-template-columns: 70px 1fr;
-        gap:10px;
-        align-items:center;
-      }
+      .row.row-top .vendor-wrap,
       .row.row-top .search-wrap{
         grid-column: 1 / -1;
         display:grid;
-        grid-template-columns: 70px 1fr; /* ✅ 搜尋欄吃滿 */
+        grid-template-columns: 70px 1fr;
         gap:10px;
         align-items:center;
       }
@@ -101,86 +95,100 @@
         padding:10px 14px;
       }
 
-      /* 按鈕列：自動換行，但盡量塞同一行 */
-      .row.row-actions{
-        gap:10px;
-      }
-      .row.row-actions button{
-        padding:10px 14px;
-      }
+      .row.row-actions{ gap:10px; }
+      .row.row-actions button{ padding:10px 14px; }
 
       .table-wrap{ overflow: visible; }
       table{ border-collapse: separate; border-spacing: 0 10px; }
       thead{ display:none; }
-      tbody, tr, td{ display:block; width:100%; }
 
+      tbody, tr{ width:100%; }
+
+      /* ✅ 關鍵：tr 變成 grid，左右兩欄 */
       tr{
+        display:grid;
+        grid-template-columns: 1fr 150px;  /* 左欄彈性、右欄固定 */
+        grid-template-rows: auto auto auto;
+        grid-template-areas:
+          "code  stock"
+          "drug  stock"
+          "usage status";
+        gap: 6px 10px;
+
         background:#fff;
         border-radius:16px;
         box-shadow: 0 10px 24px rgba(0,0,0,.08);
         overflow:hidden;
+        padding: 10px 12px;
       }
-      tr:nth-child(even) td{ background:transparent; }
 
-      td{ white-space: normal; padding: 10px 12px; }
+      /* td 在手機不要 block，交給 grid */
+      td{ padding:0; margin:0; white-space:normal; }
 
-      td.col-code{ font-weight:900; font-size:15px; padding-bottom: 6px; }
-      td.col-usage{ color:#374151; padding-top:0; padding-bottom: 8px; }
+      td.col-code{
+        grid-area: code;
+        font-weight:900;
+        font-size:15px;
+      }
 
       td.col-drug{
+        grid-area: drug;
         color:#111827;
         font-weight:700;
         line-height:1.35;
+
         display: -webkit-box;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow:hidden;
-        padding-top:0;
-        padding-bottom: 10px;
       }
 
-      /* ✅ 這段是你要的：庫存 + 狀態 同一行（狀態可被省略） */
+      td.col-usage{
+        grid-area: usage;
+        color:#374151;
+        font-weight:800;
+      }
+
+      /* 右欄：庫存 */
       td.col-stock{
-        padding-top:0;
+        grid-area: stock;
         display:flex;
-        align-items:center;
-        justify-content: space-between;
-        gap:10px;
+        flex-direction:column;
+        align-items:stretch;
+        gap:6px;
+        justify-content:flex-start;
       }
       td.col-stock::before{
         content:"庫存";
         font-weight:900;
         color:#111827;
-        flex: 0 0 auto;
       }
       td.col-stock input[type="number"]{
-        width: 110px;
+        width:100%;
         font-size:16px;
         padding:10px 10px;
         border-radius:14px;
-        flex: 0 0 auto;
+        text-align:center;
       }
 
-      /* ✅ 狀態改成 inline，跟庫存同一行（放在 col-status 但視覺上同列） */
+      /* 右欄：狀態（太長省略） */
       td.col-status{
-        padding-top:0;
-        padding-bottom: 12px;
+        grid-area: status;
         display:flex;
-        align-items:center;
-        gap:10px;
+        flex-direction:column;
+        align-items:flex-start;
+        gap:6px;
       }
       td.col-status::before{
         content:"狀態";
         font-weight:900;
         color:#111827;
-        flex: 0 0 auto;
       }
       td.col-status .tag{
-        max-width: 120px;          /* ✅ 狀態太長就省略 */
+        max-width: 150px;
         overflow:hidden;
         text-overflow:ellipsis;
         white-space:nowrap;
-        display:inline-block;
       }
     }
 
@@ -197,7 +205,6 @@
   <h1>藥品採購查詢系統</h1>
   <div class="subtitle">廠商下拉：中文前2碼 → 英文前5碼（中文優先顯示）</div>
 
-  <!-- ✅ 手機：分成 row-top / row-actions 方便排版 -->
   <div class="row row-top">
     <div class="vendor-wrap">
       <label>廠商：</label>
