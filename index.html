@@ -164,7 +164,7 @@
 
     <label>搜尋：</label>
     <div style="position:relative;flex:1">
-      <input id="searchInput" style="width:100%" placeholder="藥代 / 藥名 / 廠商">
+      <input id="searchInput" style="width:100%" placeholder="輸入就會自動查（藥代 / 藥名 / 廠商）">
     </div>
 
     <button id="searchBtn">查詢</button>
@@ -208,6 +208,7 @@
 <script>
 (() => {
   let rawData=[], viewData=[], chart;
+  let typingTimer = null;
 
   const $=id=>document.getElementById(id);
   const isEng=s=>/^[A-Za-z]/.test(s);
@@ -219,8 +220,7 @@
 
   function blurSearch(){
     const si = $("searchInput");
-    si.blur(); // ✅ 收鍵盤
-    // iOS 有時仍卡住，補強：把焦點移到 body
+    si.blur();
     document.body.focus?.();
   }
 
@@ -234,7 +234,7 @@
     const keys=[...new Set(rawData.map(x=>vendorKey(x.廠商)))].filter(Boolean);
     keys.sort((a,b)=>{
       const ae=/^[A-Z]/.test(a), be=/^[A-Z]/.test(b);
-      if(ae!==be) return ae-be;  // 中文先
+      if(ae!==be) return ae-be;
       return a.localeCompare(b);
     });
     $("vendorSelect").innerHTML='<option value="">全部</option>';
@@ -246,7 +246,7 @@
     });
   }
 
-  function filterData(){
+  function filterData({scroll=false} = {}){
     const vSel=$("vendorSelect").value;
     const kwRaw=$("searchInput").value.trim();
     const kw=kwRaw.toLowerCase();
@@ -264,6 +264,8 @@
 
     viewData=needOnly?base.filter(x=>x.需採購):base;
     render(base);
+
+    if(scroll) scrollToFirstResult();
   }
 
   function setStatusCell(td, x){
@@ -320,7 +322,6 @@
         }
       });
 
-      // iOS 有時沒有 Enter key，用 change 當補強
       inp.addEventListener("change", ()=>{
         if(inp.value!=="") moveToNextStockInput(inp);
       });
@@ -353,44 +354,49 @@
     filterData();
   }
 
-  // ✅ 查詢：查完收鍵盤 + 捲到第一筆
+  // ✅ 查詢按鈕：仍保留，但不用一定按
   $("searchBtn").onclick=()=>{
-    filterData();
+    filterData({scroll:true});
     blurSearch();
-    scrollToFirstResult();
   };
 
   $("resetBtn").onclick=()=>{
     $("vendorSelect").value="";
     $("searchInput").value="";
     $("needBuyOnly").checked=false;
-    filterData();
+    filterData({scroll:false});
     blurSearch();
   };
 
   $("vendorSelect").onchange=()=>{
-    filterData();
+    filterData({scroll:true});
     blurSearch();
-    scrollToFirstResult();
   };
 
   $("needBuyOnly").onchange=()=>{
-    filterData();
+    filterData({scroll:true});
     blurSearch();
-    scrollToFirstResult();
   };
 
-  // ✅ Enter 查詢也收鍵盤 + 捲到第一筆
+  // ✅ 輸入就自動查詢（防抖 250ms）
+  $("searchInput").addEventListener("input", ()=>{
+    if(typingTimer) clearTimeout(typingTimer);
+    typingTimer = setTimeout(()=>{
+      filterData({scroll:true});
+    }, 250);
+  });
+
+  // ✅ Enter：立即查 + 收鍵盤 + 捲第一筆
   $("searchInput").addEventListener("keydown",(e)=>{
     if(e.key==="Enter"){
       e.preventDefault();
-      filterData();
+      if(typingTimer) clearTimeout(typingTimer);
+      filterData({scroll:true});
       e.target.blur();
-      scrollToFirstResult();
     }
   });
 
-  // ✅ 點清單/空白處：自動收鍵盤（但點到 input 不要干擾）
+  // ✅ 點清單/空白處：自動收鍵盤（點到 input/select 不干擾）
   document.addEventListener("pointerdown", (e)=>{
     const t = e.target;
     const isInput = t && (t.tagName === "INPUT" || t.tagName === "SELECT" || t.isContentEditable);
