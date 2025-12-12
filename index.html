@@ -292,17 +292,30 @@
   }
 
   function populateVendors() {
-    const keys = new Set(rawData.map(item => vendorKey(item.廠商)));
-    vendorSelect.innerHTML = '<option value="">全部</option>';
+  const keys = new Set(rawData.map(item => vendorKey(item.廠商)));
+  vendorSelect.innerHTML = '<option value="">全部</option>';
 
-    [...keys].filter(Boolean).sort().forEach(key => {
-      const opt = document.createElement("option");
-      opt.value = key;
-      // ✅ 這裡就是你要的：英文顯示「前5碼」、中文顯示「前2碼」
-      opt.textContent = /^[A-Z]/.test(key) ? `${key}（英文前5碼）` : `${key}（中文前2碼）`;
-      vendorSelect.appendChild(opt);
-    });
-  }
+  const arr = [...keys].filter(Boolean);
+
+  // ✅ 先中文再英文：中文(key不是A-Z開頭)排前面，英文排後面
+  arr.sort((a, b) => {
+    const aEng = /^[A-Z]/.test(a);   // 英文代碼(5碼) → true
+    const bEng = /^[A-Z]/.test(b);
+
+    if (aEng !== bEng) return aEng - bEng;  // false(中文) 先，true(英文) 後
+    return a.localeCompare(b);             // 同類別再做字母排序
+  });
+
+  arr.forEach(key => {
+    const opt = document.createElement("option");
+    opt.value = key;
+    opt.textContent = /^[A-Z]/.test(key)
+      ? `${key}（英文前5碼）`
+      : `${key}（中文前2碼）`;
+    vendorSelect.appendChild(opt);
+  });
+}
+
 
   // ✅ 統一一支篩選（applyFilter / 更新統計都用它）
   function getBaseFilteredData() {
