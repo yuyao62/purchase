@@ -10,10 +10,10 @@
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
     body { margin: 0; background: #eef1f7; display: flex; justify-content: center; min-height: 100vh; }
     .app { width: min(1100px, 100%); background: #fff; margin: 20px; padding: 24px; border-radius: 20px; box-shadow: 0 18px 40px rgba(0,0,0,.12); }
-    h1 { text-align: center; margin-bottom: 6px; }
-    .subtitle { text-align: center; color: #6b7280; font-size: 14px; margin-bottom: 20px; }
+    h1 { text-align: center; margin: 0 0 6px; }
+    .subtitle { text-align: center; color: #6b7280; font-size: 14px; margin-bottom: 16px; }
 
-    .row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 12px; }
     label { font-weight: 800; }
 
     input, select {
@@ -68,55 +68,61 @@
     .tag-buy{ background:#fee2e2; color:#b91c1c; }
     .tag-ok{ background:#dcfce7; color:#166534; }
 
-    /* ===== ✅ 手機：卡片版（右欄：庫存+狀態同一行） ===== */
+    /* ===== ✅ 手機：更緊湊（同頁更好用） ===== */
     @media (max-width: 520px){
-      .app{ margin:12px; padding:16px; }
+      .app{ margin:10px; padding:12px; border-radius:18px; }
+      h1{ font-size:28px; }
+      .subtitle{ font-size:12px; margin-bottom:10px; }
 
-      /* 上方：廠商/搜尋（搜尋更大） */
+      .pill{ font-size:12px; padding:3px 10px; }
+      .row{ gap:10px; margin-bottom:10px; }
+
+      /* 上方：廠商/搜尋（縮排、搜尋吃滿） */
       .row.row-top{
         display:grid;
-        grid-template-columns: 70px 1fr;
-        gap:10px;
+        grid-template-columns: 64px 1fr;
+        gap:8px;
         align-items:center;
+        margin-bottom:10px;
       }
       .row.row-top .vendor-wrap,
       .row.row-top .search-wrap{
         grid-column: 1 / -1;
         display:grid;
-        grid-template-columns: 70px 1fr;
-        gap:10px;
+        grid-template-columns: 64px 1fr;
+        gap:8px;
         align-items:center;
       }
       .row.row-top select,
       .row.row-top input{
         width:100%;
-        font-size:16px;
-        padding:10px 14px;
+        font-size:15px;
+        padding:9px 12px;
       }
 
-      .row.row-actions{ gap:10px; }
-      .row.row-actions button{ padding:10px 14px; }
+      /* 按鈕列更緊 */
+      .row.row-actions{ gap:8px; margin-bottom:10px; }
+      .row.row-actions button{ padding:9px 12px; font-size:14px; }
 
       /* 卡片列表 */
       .table-wrap{ overflow: visible; }
-      table{ border-collapse: separate; border-spacing: 0 10px; }
+      table{ border-collapse: separate; border-spacing: 0 8px; }
       thead{ display:none; }
-
       tbody, tr{ width:100%; }
 
+      /* ✅ 關鍵：左右欄更窄、更貼 */
       tr{
         display:grid;
-        grid-template-columns: 1fr 160px;  /* 左資訊 / 右操作 */
+        grid-template-columns: 1fr 120px; /* 右欄縮窄 */
         grid-template-areas:
           "code  right"
           "drug  right"
           "usage right";
-        gap: 6px 12px;
-
+        gap: 4px 8px;                   /* gap 變小 */
         background:#fff;
-        border-radius:16px;
-        box-shadow: 0 10px 24px rgba(0,0,0,.08);
-        padding: 12px;
+        border-radius:14px;
+        box-shadow: 0 8px 18px rgba(0,0,0,.08);
+        padding: 10px;                  /* padding 變小 */
       }
 
       td{
@@ -125,58 +131,51 @@
         white-space:normal;
       }
 
-      /* 左欄 */
-      td.col-code{
-        grid-area: code;
-        font-weight:900;
-        font-size:15px;
-      }
+      /* 左欄字體略縮 */
+      td.col-code{ grid-area: code; font-weight:900; font-size:14px; }
       td.col-drug{
         grid-area: drug;
         font-weight:700;
-        line-height:1.35;
+        line-height:1.3;
         display:-webkit-box;
         -webkit-line-clamp:2;
         -webkit-box-orient:vertical;
         overflow:hidden;
       }
-      td.col-usage{
-        grid-area: usage;
-        font-weight:800;
-        color:#374151;
-      }
+      td.col-usage{ grid-area: usage; font-weight:800; color:#374151; font-size:13px; }
 
-      /* 右欄：庫存 + 狀態（同一行） */
+      /* 右欄：庫存 + 狀態同一行（更緊） */
       td.col-stock{
         grid-area: right;
         display:flex;
         align-items:center;
         justify-content:flex-end;
-        gap:8px;
+        gap:6px;
       }
-      td.col-stock::before{ content:none; } /* 移除桌機 before */
+      td.col-stock::before{ content:none; }
 
       td.col-stock input[type="number"]{
-        width:84px;
-        font-size:16px;
-        padding:8px 8px;
+        width:66px;              /* ✅ 再縮小 */
+        font-size:15px;
+        padding:8px 6px;
         border-radius:12px;
         text-align:center;
         flex-shrink:0;
       }
 
-      /* 狀態不要獨立一欄（會在 JS 內塞到 col-stock） */
-      td.col-status{ display:none; }
+      td.col-status{ display:none; } /* 狀態移到 stock 裡 */
 
-      /* 狀態省略 */
       td.col-stock .tag{
-        max-width:60px;
+        max-width:44px;          /* ✅ 狀態更短，必要時省略 */
         overflow:hidden;
         text-overflow:ellipsis;
         white-space:nowrap;
-        font-size:12px;
-        padding:4px 8px;
+        font-size:11px;
+        padding:4px 6px;
       }
+
+      /* 圖表也縮一點，避免佔太多 */
+      canvas#chart{ height:140px !important; }
     }
 
     .modal {
@@ -306,7 +305,7 @@
     if(scroll) scrollToFirstResult();
   }
 
-  // ✅ 手機版：把狀態 tag 放到 col-stock 右邊（庫存 + 狀態同一行）
+  // ✅ 桌機：狀態在 col-status；手機：狀態塞到 col-stock 右邊
   function setStatusUI(tr, x){
     const stockTd = tr.querySelector(".col-stock");
     const statusTd = tr.querySelector(".col-status");
@@ -316,13 +315,11 @@
       return x.需採購 ? `<span class="tag tag-buy">需採購</span>` : `<span class="tag tag-ok">庫存足夠</span>`;
     })();
 
-    // 桌機：狀態放 statusTd
     if (window.matchMedia("(min-width: 521px)").matches) {
       statusTd.innerHTML = tagHtml;
       return;
     }
 
-    // 手機：狀態放在庫存右邊（先清掉舊的 tag）
     stockTd.querySelectorAll(".tag").forEach(n=>n.remove());
     stockTd.insertAdjacentHTML("beforeend", tagHtml);
   }
@@ -354,7 +351,6 @@
 
       const inp=tr.querySelector('input[type="number"]');
 
-      // 初始狀態
       setStatusUI(tr, x);
 
       inp.addEventListener("input", ()=>{
@@ -450,9 +446,8 @@
 
   $("emergencyBtn").onclick=()=>$("emergencyModal").style.display="flex";
 
-  // ✅ 螢幕旋轉/寬度改變時，重畫一次讓狀態位置正確
+  // ✅ 旋轉/縮放時重畫（狀態位置正確）
   window.addEventListener("resize", ()=>{
-    // 只重新渲染目前結果（不重算）
     const vSel=$("vendorSelect").value;
     const kw=$("searchInput").value.trim().toLowerCase();
     const needOnly=$("needBuyOnly").checked;
