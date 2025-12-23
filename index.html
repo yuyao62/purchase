@@ -6,79 +6,38 @@
 <title>藥品採購查詢系統</title>
 
 <style>
-html, body {
-  max-width: 100%;
-  overflow-x: hidden;
-  margin: 0;
-  padding: 0;
-  font-size: 16px;
-  background: #f3f4f6;
-  color: #111827;
-}
-* { box-sizing: border-box; max-width: 100%; }
-
-.app{
-  width: min(1100px, 100%);
-  margin: 16px auto;
-  background: #fff;
-  padding: 16px;
-  border-radius: 16px;
-  box-shadow: 0 12px 28px rgba(0,0,0,.12);
-}
+/* 保持原本樣式 */
+html, body { max-width:100%; overflow-x:hidden; margin:0; padding:0; font-size:16px; background:#f3f4f6; color:#111827; }
+* { box-sizing:border-box; max-width:100%; }
+.app{ width:min(1100px,100%); margin:16px auto; background:#fff; padding:16px; border-radius:16px; box-shadow:0 12px 28px rgba(0,0,0,.12); }
 h1{ text-align:center; margin:0 0 8px; }
 .subtitle{ text-align:center; color:#6b7280; font-size:14px; margin-bottom:12px; }
-
 .row{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:10px; }
 label{ font-weight:800; }
-input, select, button{
-  font-size:16px; padding:8px 12px; border-radius:999px;
-  border:1px solid #d1d5db; max-width:100%;
-}
+input, select, button{ font-size:16px; padding:8px 12px; border-radius:999px; border:1px solid #d1d5db; max-width:100%; }
 button{ background:#4f46e5; color:#fff; font-weight:800; border:none; cursor:pointer; }
 .secondary-btn{ background:#111827; }
 .ghost-btn{ background:#e5e7eb; color:#111827; }
-
-#overNotice{
-  display:none; margin-bottom:12px; padding:10px 14px;
-  border-radius:14px; background:#ede9fe; color:#4c1d95;
-  font-weight:900; cursor:pointer;
-}
+#overNotice{ display:none; margin-bottom:12px; padding:10px 14px; border-radius:14px; background:#ede9fe; color:#4c1d95; font-weight:900; cursor:pointer; }
 #overNotice:hover{ background:#ddd6fe; }
-
 .pill{ padding:4px 12px; border-radius:999px; font-size:14px; font-weight:800; }
 .pill-total{ background:#dbeafe; }
 .pill-buy{ background:#fee2e2; color:#991b1b; }
 .pill-ok{ background:#dcfce7; color:#166534; }
 .pill-over{ background:#ede9fe; color:#4c1d95; }
-
 .table-wrap{ width:100%; overflow-x:hidden; }
 table{ width:100%; border-collapse:collapse; table-layout:fixed; }
 th, td{ padding:8px; vertical-align:top; word-break:break-word; }
 th{ background:#e5e7eb; }
 tr:nth-child(even) td{ background:#f3f4f6; }
-
 .tag{ display:inline-block; padding:4px 10px; border-radius:999px; font-weight:800; font-size:14px; }
 .tag-empty{ background:#e5e7eb; }
 .tag-ok{ background:#dcfce7; color:#166534; }
 .tag-buy{ background:#fee2e2; color:#991b1b; }
 .tag-over{ background:#ede9fe; color:#5b21b6; }
-
 .stock-wrap{ display:flex; flex-direction:column; gap:6px; }
 .stock-top{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
 .note-input{ width:100%; padding:6px 10px; border-radius:10px; border:1px solid #d1d5db; font-size:14px; }
-
-@media (max-width:520px){
-  .app{ margin:0; border-radius:0; box-shadow:none; }
-  table, thead, tbody, tr, td, th{ display:block; width:100%; }
-  thead{ display:none; }
-  tr{ background:#fff; border-radius:14px; padding:10px; margin-bottom:10px; }
-  td{ padding:4px 0; }
-  td::before{ font-weight:900; color:#6b7280; display:block; margin-bottom:2px; }
-  td:nth-child(1)::before{ content:"藥代"; }
-  td:nth-child(2)::before{ content:"藥品"; }
-  td:nth-child(3)::before{ content:"用量"; }
-  td:nth-child(4)::before{ content:"庫存"; }
-}
 </style>
 </head>
 <body>
@@ -104,9 +63,17 @@ tr:nth-child(even) td{ background:#f3f4f6; }
   </div>
 
   <div class="row">
-    <label>搜尋藥品/廠商</label>
-    <input id="searchInput" placeholder="輸入藥代、藥品或廠商">
+    <label>搜尋藥品</label>
+    <input id="searchInput" placeholder="輸入藥代或藥品名稱">
     <button id="searchBtn">搜尋</button>
+  </div>
+
+  <div class="row">
+    <label>搜尋廠商</label>
+    <select id="vendorSelect">
+      <option value="">--選擇廠商--</option>
+    </select>
+    <button id="vendorSearchBtn">搜尋</button>
   </div>
 
   <div class="row">
@@ -135,6 +102,7 @@ tr:nth-child(even) td{ background:#f3f4f6; }
     <ul id="overListBody"></ul>
   </div>
 </div>
+
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -187,6 +155,7 @@ tr:nth-child(even) td{ background:#f3f4f6; }
       }catch{}
     }
     render();
+    populateVendors();
   }
 
   function usage(x){
@@ -195,14 +164,24 @@ tr:nth-child(even) td{ background:#f3f4f6; }
     return sum;
   }
 
-   function isOver(x){
+  function isOver(x){
     if(manual[x.藥代]) return true;
     const u = usage(x);
     const st = stock[x.藥代];
     return u>0 && st!=null && st>u*6;
   }
 
-  function render(){
+  function populateVendors(){
+    const vendorSet = new Set(rawData.map(x => x.廠商).filter(Boolean));
+    const select = $("vendorSelect");
+    select.innerHTML = '<option value="">--選擇廠商--</option>';
+    vendorSet.forEach(v=>{
+      const opt = new Option(v, v);
+      select.appendChild(opt);
+    });
+  }
+
+   function render(){
     const tb = $("drugBody");
     tb.innerHTML = "";
     let over=0, need=0, ok=0;
@@ -274,7 +253,7 @@ tr:nth-child(even) td{ background:#f3f4f6; }
       $("overList").style.display = "none";
     }
   }
-  // 搜尋功能（支援藥代、藥品、廠商）
+  // 搜尋功能（藥代/藥品）
   $("searchBtn").onclick = () => {
     const keyword = $("searchInput").value.trim();
     if(!keyword){ render(); return; }
@@ -282,18 +261,40 @@ tr:nth-child(even) td{ background:#f3f4f6; }
     tb.innerHTML = "";
 
     rawData.filter(x=>{
-      // 中文：比對前2碼
-      if(/[\u4e00-\u9fa5]/.test(keyword)){
-        return (x.廠商 && x.廠商.startsWith(keyword.slice(0,2))) ||
-               x.藥代.includes(keyword) || x.藥品.includes(keyword);
-      }
-      // 英文：比對前5碼（忽略大小寫）
-      else{
-        return (x.廠商 && x.廠商.toLowerCase().startsWith(keyword.slice(0,5).toLowerCase())) ||
-               x.藥代.toLowerCase().includes(keyword.toLowerCase()) ||
-               x.藥品.toLowerCase().includes(keyword.toLowerCase());
-      }
+      return x.藥代.includes(keyword) || x.藥品.includes(keyword);
     }).forEach(x=>{
+      const u = usage(x);
+      const st = stock[x.藥代];
+      const overFlag = isOver(x);
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${x.藥代}</td>
+        <td>${x.藥品}</td>
+        <td>${u}</td>
+        <td>
+          <div class="stock-wrap">
+            <div class="stock-top">
+              <input type="number" value="${st??""}">
+              ${overFlag?'<span class="tag tag-over">庫存過高</span>':
+                st==null?'<span class="tag tag-empty">未輸入</span>':
+                '<span class="tag tag-ok">正常</span>'}
+            </div>
+            <input class="note-input" placeholder="備註" value="${notes[x.藥代]??""}">
+          </div>
+        </td>
+      `;
+      tb.appendChild(tr);
+    });
+  };
+
+  // 廠商搜尋（下拉選單）
+  $("vendorSearchBtn").onclick = () => {
+    const vendor = $("vendorSelect").value;
+    if(!vendor){ render(); return; }
+    const tb = $("drugBody");
+    tb.innerHTML = "";
+
+    rawData.filter(x => x.廠商 === vendor).forEach(x=>{
       const u = usage(x);
       const st = stock[x.藥代];
       const overFlag = isOver(x);
