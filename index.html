@@ -1,44 +1,138 @@
-<!doctype html><html lang="zh-Hant"><head>
-<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>藥品採購查詢系統</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
 <style>
-html,body{max-width:100%;overflow-x:hidden;margin:0;background:#f3f4f6;color:#111827;font-size:16px}
+html,body{
+  width:100%;
+  max-width:100%;
+  overflow-x:hidden;
+  margin:0;
+  background:#f3f4f6;
+  color:#111827;
+  font-size:16px
+}
+body{position:relative}
 *{box-sizing:border-box;max-width:100%}
+
 .app{width:min(1100px,100%);margin:12px auto;background:#fff;padding:14px;border-radius:16px;box-shadow:0 10px 22px rgba(0,0,0,.10)}
-h1{margin:0 0 6px;text-align:center} .sub{color:#6b7280;text-align:center;font-size:13px;margin:0 0 10px}
+h1{margin:0 0 6px;text-align:center}
+.sub{color:#6b7280;text-align:center;font-size:13px;margin:0 0 10px}
+
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
 label{font-weight:900}
 input,select,button{font-size:16px;padding:8px 12px;border-radius:999px;border:1px solid #d1d5db}
 button{border:none;background:#4f46e5;color:#fff;font-weight:900;cursor:pointer}
-.btn2{background:#111827}.btn3{background:#e5e7eb;color:#111827}.btn4{background:#374151}
+.btn2{background:#111827}
+.btn3{background:#e5e7eb;color:#111827}
+.btn4{background:#374151}
+
 .pill{padding:4px 12px;border-radius:999px;font-size:14px;font-weight:900}
-.p1{background:#dbeafe}.p2{background:#fee2e2;color:#991b1b}.p3{background:#dcfce7;color:#166534}.p4{background:#ede9fe;color:#4c1d95}
-.table-wrap{width:100%;overflow-x:hidden} table{width:100%;border-collapse:collapse;table-layout:fixed}
-th,td{padding:8px;vertical-align:top;word-break:break-word} th{background:#e5e7eb} tr:nth-child(even) td{background:#f3f4f6}
+.p1{background:#dbeafe}
+.p2{background:#fee2e2;color:#991b1b}
+.p3{background:#dcfce7;color:#166534}
+.p4{background:#ede9fe;color:#4c1d95}
+
+.table-wrap{width:100%;overflow-x:hidden}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+th,td{padding:8px;vertical-align:top;word-break:break-word}
+th{background:#e5e7eb}
+tr:nth-child(even) td{background:#f3f4f6}
+
 .tag{display:inline-block;padding:4px 10px;border-radius:999px;font-weight:900;font-size:13px}
-.t0{background:#e5e7eb}.t1{background:#dcfce7;color:#166534}.t2{background:#fee2e2;color:#991b1b}.t3{background:#ede9fe;color:#5b21b6}
+.t0{background:#e5e7eb}
+.t1{background:#dcfce7;color:#166534}
+.t2{background:#fee2e2;color:#991b1b}
+.t3{background:#ede9fe;color:#5b21b6}
+
 .stock{display:flex;flex-direction:column;gap:6px}
 .stockTop{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .note{width:100%;padding:6px 10px;border-radius:10px;border:1px solid #d1d5db;font-size:14px}
+
 .announceBar{display:none;margin:8px 0;padding:10px 14px;border-radius:14px;background:#ede9fe;color:#4c1d95;font-weight:900;cursor:pointer}
 .announceBar:hover{background:#ddd6fe}
+
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;padding:12px}
 .box{background:#fff;width:min(980px,100%);border-radius:16px;box-shadow:0 18px 40px rgba(0,0,0,.25);padding:12px}
 .boxHead{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.boxHead h3{margin:0} .boxSub{color:#6b7280;font-size:13px;margin:6px 0 10px}
+.boxHead h3{margin:0}
+.boxSub{color:#6b7280;font-size:13px;margin:6px 0 10px}
 .box .table-wrap{max-height:70vh;overflow:auto;border-radius:12px}
 .small{font-size:13px;color:#6b7280}
+
+/* 手機摘要卡：藥代/用量同列，藥品下一列 */
+.mCard{display:none}
+.mTop{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.mCode,.mQty{font-weight:900;font-size:18px}
+.mName{
+  margin-top:4px;
+  font-size:16px;
+  font-weight:600;
+  line-height:1.25;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  overflow-wrap:anywhere;
+  word-break:break-word
+}
+
 @media(max-width:520px){
   .app{margin:0;border-radius:0;box-shadow:none}
-  table,thead,tbody,tr,td,th{display:block;width:100%} thead{display:none}
-  tr{background:#fff;border-radius:14px;padding:10px;margin:10px 0} tr:nth-child(even) td{background:transparent}
-  td{padding:4px 0} td::before{font-weight:900;color:#6b7280;display:block;margin-bottom:2px}
-  td:nth-child(1)::before{content:"藥代"} td:nth-child(2)::before{content:"藥品"} td:nth-child(3)::before{content:"用量"} td:nth-child(4)::before{content:"庫存 / 公告"}
-  .drugName{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;word-break:break-word}
-  .stockTop input{width:120px}
+
+  /* 讓整個表格卡片式呈現 */
+  table,thead,tbody,tr,td,th{display:block;width:100%}
+  thead{display:none}
+
+  tr{
+    background:#fff;
+    border-radius:14px;
+    padding:10px;
+    margin:10px 0;
+    overflow:hidden; /* ✅ 防止內容撐出界 */
+  }
+  tr:nth-child(even) td{background:transparent}
+
+  td{padding:4px 0}
+
+  /* ✅ 不用 td::before 印中文（避免四行） */
+  td::before{display:none !important}
+
+  /* ✅ 手機只顯示第 4 欄（庫存/公告），前 3 欄隱藏 */
+  tr td:nth-child(1),
+  tr td:nth-child(2),
+  tr td:nth-child(3){display:none}
+
+  /* ✅ 顯示手機摘要 */
+  .mCard{display:block;margin-bottom:8px}
+
+  /* ✅ 藥名一定能斷行，避免左右滑 */
+  .drugName,.mName{overflow-wrap:anywhere;word-break:break-word}
+
+  /* ✅ 庫存/公告那排允許換行 + input 不撐寬 */
+  .stockTop{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    align-items:center
+  }
+  .stockTop input{
+    width:100%;
+    max-width:160px;
+    min-width:0 !important;
+    flex:1 1 120px
+  }
+  .tag{white-space:nowrap;flex:0 0 auto}
+  .stockTop label{flex:1 1 auto;min-width:0;white-space:nowrap}
 }
-</style></head><body>
+</style>
+</head>
+
+<body>
 <div class="app">
   <h1>藥品採購查詢系統</h1>
   <div class="sub">每月一檔 inventory_YYYY_MM.json（單月為主，支援進階多月）</div>
@@ -147,7 +241,7 @@ th,td{padding:8px;vertical-align:top;word-break:break-word} th{background:#e5e7e
   const pad2=n=>String(n).padStart(2,"0");
   const file=(y,m)=>`inventory_${y}_${pad2(m)}.json`;
 
-  // 廠商 key：抓「前兩個中文(CJK)字」，避免中國化學變怪符號
+  // 廠商 key：抓「前兩個中文(CJK)字」
   const vendorKey = (s)=>{
     s=(s||"未標示廠商").trim();
     const m=[...s.matchAll(/[\u4E00-\u9FFF]/g)].map(x=>x[0]);
@@ -181,7 +275,6 @@ th,td{padding:8px;vertical-align:top;word-break:break-word} th{background:#e5e7e
     const s=Math.min(a,b), e=Math.max(a,b);
     const monthCount=(e-s+1);
 
-    // 讀取區間每月，累加用量；多月時用「平均月用量」做 6 個月判斷
     const agg=new Map();
     for(let m=s;m<=e;m++){
       try{
@@ -196,6 +289,7 @@ th,td{padding:8px;vertical-align:top;word-break:break-word} th{background:#e5e7e
         });
       }catch{}
     }
+
     rows=[...agg.values()].map(x=>{
       const avg = monthCount>0 ? (x.sum/monthCount) : 0;
       const vKey = vendorKey(x.廠商);
@@ -259,9 +353,19 @@ th,td{padding:8px;vertical-align:top;word-break:break-word} th{background:#e5e7e
         <td class="drugName">${r.藥品}</td>
         <td>${u}</td>
         <td>
+          <!-- 手機摘要：藥代/用量同列，藥品下一列 -->
+          <div class="mCard">
+            <div class="mTop">
+              <div><span style="color:#6b7280;font-weight:900;font-size:13px">藥代</span> <span class="mCode">${r.藥代}</span></div>
+              <div><span style="color:#6b7280;font-weight:900;font-size:13px">用量</span> <span class="mQty">${u}</span></div>
+            </div>
+            <div style="margin-top:4px"><span style="color:#6b7280;font-weight:900;font-size:13px">藥品</span></div>
+            <div class="mName">${r.藥品}</div>
+          </div>
+
           <div class="stock">
             <div class="stockTop">
-              <input type="number" inputmode="numeric" value="${st??""}" style="min-width:120px">
+              <input type="number" inputmode="numeric" value="${st??""}">
               ${tagHTML(st,u,ann)}
               <label style="display:flex;align-items:center;gap:6px;margin-left:6px">
                 <input type="checkbox" ${manual[r.藥代]?"checked":""} style="transform:scale(1.05)">手動公告
@@ -270,6 +374,7 @@ th,td{padding:8px;vertical-align:top;word-break:break-word} th{background:#e5e7e
             <input class="note" placeholder="備註" value="${notes[r.藥代]??""}">
           </div>
         </td>`;
+
       const inputs=tr.querySelectorAll("input");
       const stockInp=inputs[0], manChk=inputs[1], noteInp=inputs[2];
 
@@ -328,7 +433,7 @@ th,td{padding:8px;vertical-align:top;word-break:break-word} th{background:#e5e7e
       const u=Math.round((r.用量||0)*100)/100;
       const st=stock[r.藥代];
       const reason=annReason(r);
-      const canDel=adminOn; // 管理者才能刪
+      const canDel=adminOn;
       const tr=document.createElement("tr");
       tr.innerHTML=`
         <td>${r.藥代}</td>
@@ -342,7 +447,6 @@ th,td{padding:8px;vertical-align:top;word-break:break-word} th{background:#e5e7e
       tb.appendChild(tr);
     });
 
-    // 刪除公告：同時移除手動公告，並「忽略自動」(等同刪掉自動公告顯示)
     tb.querySelectorAll("[data-del]").forEach(btn=>{
       btn.onclick=()=>{
         const code=btn.getAttribute("data-del");
@@ -358,7 +462,6 @@ th,td{padding:8px;vertical-align:top;word-break:break-word} th{background:#e5e7e
     $("modal").style.display="flex";
   }
 
-  // 匯出 Excel（匯出目前篩選結果）
   function exportExcel(){
     const data=viewRows.map(r=>{
       const st=stock[r.藥代];
@@ -375,7 +478,6 @@ th,td{padding:8px;vertical-align:top;word-break:break-word} th{background:#e5e7e
     XLSX.writeFile(wb,`採購查詢_${y}_${a}-${b}.xlsx`);
   }
 
-  // 年度總覽：簡單彙整「公告/需採購」數（逐月抓檔、只算有庫存輸入者）
   async function yearOverview(){
     const y=+$("year").value;
     const backup={m1:$("m1").value,m2:$("m2").value,adv:$("adv").checked};
@@ -392,12 +494,10 @@ th,td{padding:8px;vertical-align:top;word-break:break-word} th{background:#e5e7e
       });
       sum.push({月份:m, 筆數:total, 需採購:buy, 公告:ann});
     }
-    // 還原
     $("m1").value=backup.m1; $("m2").value=backup.m2; $("adv").checked=backup.adv;
     $("advBox").style.display=backup.adv?"inline-flex":"none";
     await loadData();
 
-    // 用公告明細 modal 顯示總覽（重用）
     $("annRule").textContent="年度總覽（每月：筆數 / 需採購 / 公告）";
     const tb=$("annBody"); tb.innerHTML="";
     sum.forEach(x=>{
@@ -408,7 +508,6 @@ th,td{padding:8px;vertical-align:top;word-break:break-word} th{background:#e5e7e
     $("modal").style.display="flex";
   }
 
-  // 廠商頁
   function openVendorPage(){
     $("vModal").style.display="flex";
     renderVendorList();
@@ -441,7 +540,6 @@ th,td{padding:8px;vertical-align:top;word-break:break-word} th{background:#e5e7e
     });
   }
 
-  // 月份切換（不跨年：你目前 year 只有 2025；若要跨年我再幫你加）
   function shiftMonth(d){
     let m=+$("m1").value; m+=d;
     if(m<1) m=1; if(m>12) m=12;
@@ -450,7 +548,6 @@ th,td{padding:8px;vertical-align:top;word-break:break-word} th{background:#e5e7e
     loadData();
   }
 
-  // 事件
   $("reload").onclick=loadData;
   $("search").onclick=applyFilters;
   $("q").addEventListener("keydown",e=>{ if(e.key==="Enter") applyFilters(); });
@@ -485,7 +582,6 @@ th,td{padding:8px;vertical-align:top;word-break:break-word} th{background:#e5e7e
 
   $("admin").onclick=()=>{
     const ok=prompt("輸入管理者密碼（此裝置）","");
-    // 你可自行改密碼規則：這裡先用「admin」當預設
     if(ok==="admin"){ adminOn=!adminOn; localStorage.setItem(ADMIN,adminOn?"1":"0"); alert(adminOn?"管理者模式已開啟":"管理者模式已關閉"); }
     $("admin").textContent=adminOn?"管理者(開)":"管理者";
   };
@@ -496,10 +592,9 @@ th,td{padding:8px;vertical-align:top;word-break:break-word} th{background:#e5e7e
     location.reload();
   };
 
-  // init
   initSelects();
   loadData();
 })();
 </script>
-</body></html>
-
+</body>
+</html>
