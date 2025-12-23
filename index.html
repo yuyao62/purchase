@@ -5,12 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>藥品採購查詢系統</title>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <style>
-/* =================================================
-   ✅ 手機版最優先：禁止任何橫向捲動（最終定案）
-   ================================================= */
 html, body {
   max-width: 100%;
   overflow-x: hidden;
@@ -22,9 +17,6 @@ html, body {
 }
 * { box-sizing: border-box; max-width: 100%; }
 
-/* =================================================
-   基本版面
-   ================================================= */
 .app{
   width: min(1100px, 100%);
   margin: 16px auto;
@@ -46,9 +38,6 @@ button{ background:#4f46e5; color:#fff; font-weight:800; border:none; cursor:poi
 .secondary-btn{ background:#111827; }
 .ghost-btn{ background:#e5e7eb; color:#111827; }
 
-/* =================================================
-   勿忘我公告條
-   ================================================= */
 #overNotice{
   display:none; margin-bottom:12px; padding:10px 14px;
   border-radius:14px; background:#ede9fe; color:#4c1d95;
@@ -56,46 +45,28 @@ button{ background:#4f46e5; color:#fff; font-weight:800; border:none; cursor:poi
 }
 #overNotice:hover{ background:#ddd6fe; }
 
-/* =================================================
-   統計 pill
-   ================================================= */
 .pill{ padding:4px 12px; border-radius:999px; font-size:14px; font-weight:800; }
 .pill-total{ background:#dbeafe; }
 .pill-buy{ background:#fee2e2; color:#991b1b; }
 .pill-ok{ background:#dcfce7; color:#166534; }
 .pill-over{ background:#ede9fe; color:#4c1d95; }
 
-/* =================================================
-   表格（手機不卡寬）
-   ================================================= */
 .table-wrap{ width:100%; overflow-x:hidden; }
 table{ width:100%; border-collapse:collapse; table-layout:fixed; }
 th, td{ padding:8px; vertical-align:top; word-break:break-word; }
 th{ background:#e5e7eb; }
 tr:nth-child(even) td{ background:#f3f4f6; }
 
-/* =================================================
-   標籤
-   ================================================= */
 .tag{ display:inline-block; padding:4px 10px; border-radius:999px; font-weight:800; font-size:14px; }
 .tag-empty{ background:#e5e7eb; }
 .tag-ok{ background:#dcfce7; color:#166534; }
 .tag-buy{ background:#fee2e2; color:#991b1b; }
 .tag-over{ background:#ede9fe; color:#5b21b6; }
 
-/* =================================================
-   庫存欄位（庫存＋備註＋手動勿忘我）
-   ================================================= */
 .stock-wrap{ display:flex; flex-direction:column; gap:6px; }
 .stock-top{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
-.note-input{
-  width:100%; padding:6px 10px; border-radius:10px;
-  border:1px solid #d1d5db; font-size:14px;
-}
+.note-input{ width:100%; padding:6px 10px; border-radius:10px; border:1px solid #d1d5db; font-size:14px; }
 
-/* =================================================
-   手機版微調（仍然只有上下滑）
-   ================================================= */
 @media (max-width:520px){
   .app{ margin:0; border-radius:0; box-shadow:none; }
   table, thead, tbody, tr, td, th{ display:block; width:100%; }
@@ -118,6 +89,10 @@ tr:nth-child(even) td{ background:#f3f4f6; }
   <div id="overNotice"></div>
 
   <div class="row">
+    <button id="resetBtn" class="ghost-btn">重置</button>
+  </div>
+
+  <div class="row">
     <label>年份</label>
     <select id="yearSelect"></select>
     <label>月份</label>
@@ -125,7 +100,7 @@ tr:nth-child(even) td{ background:#f3f4f6; }
     到
     <select id="endMonth"></select>
     <button id="reloadBtn" class="secondary-btn">重新載入</button>
-    <button id="resetBtn" class="ghost-btn">重置</button>
+    <button id="filterNeedBtn" class="ghost-btn">只看需採購</button>
   </div>
 
   <div class="row">
@@ -214,13 +189,13 @@ tr:nth-child(even) td{ background:#f3f4f6; }
     render();
   }
 
-    function usage(x){
+  function usage(x){
     let s=+$("startMonth").value, e=+$("endMonth").value, sum=0;
     for(let i=s;i<=e;i++) sum += x[`m${i}`]||0;
     return sum;
   }
 
-  function isOver(x){
+   function isOver(x){
     if(manual[x.藥代]) return true;
     const u = usage(x);
     const st = stock[x.藥代];
@@ -300,7 +275,7 @@ tr:nth-child(even) td{ background:#f3f4f6; }
     }
   }
   // 搜尋功能
-  $("searchBtn").onclick = ()=>{
+  $("searchBtn").onclick = () => {
     const keyword = $("searchInput").value.trim();
     if(!keyword){ render(); return; }
     const tb = $("drugBody");
@@ -332,11 +307,41 @@ tr:nth-child(even) td{ background:#f3f4f6; }
   };
 
   // 重置功能
-  $("resetBtn").onclick = ()=>{
+  $("resetBtn").onclick = () => {
     localStorage.removeItem(STOCK_KEY);
     localStorage.removeItem(MANUAL_KEY);
     localStorage.removeItem(NOTE_KEY);
     location.reload();
+  };
+
+  // 只看需採購
+  $("filterNeedBtn").onclick = () => {
+    const tb = $("drugBody");
+    tb.innerHTML = "";
+    rawData.filter(x => {
+      const u = usage(x);
+      const st = stock[x.藥代];
+      return st!=null && u > st;
+    }).forEach(x => {
+      const u = usage(x);
+      const st = stock[x.藥代];
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${x.藥代}</td>
+        <td>${x.藥品}</td>
+        <td>${u}</td>
+        <td>
+          <div class="stock-wrap">
+            <div class="stock-top">
+              <input type="number" value="${st??""}">
+              <span class="tag tag-buy">需採購</span>
+            </div>
+            <input class="note-input" placeholder="備註" value="${notes[x.藥代]??""}">
+          </div>
+        </td>
+      `;
+      tb.appendChild(tr);
+    });
   };
 
   $("reloadBtn").onclick = loadData;
@@ -350,4 +355,3 @@ tr:nth-child(even) td{ background:#f3f4f6; }
 </script>
 </body>
 </html>
-
