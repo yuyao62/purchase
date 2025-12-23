@@ -7,6 +7,37 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+/* ===== 手機版：禁止任何橫向捲動（最終定案） ===== */
+html, body {
+  max-width: 100%;
+  overflow-x: hidden; /* ⛔ 整頁禁止左右滑 */
+}
+
+/* 手機版強制所有元素不撐寬 */
+@media (max-width: 520px) {
+  * {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* 表格或容器一律不給橫向 scroll */
+  .table-wrap,
+  table {
+    overflow-x: hidden !important;
+  }
+
+  /* 防止 input / tag / badge 撐寬 */
+  input,
+  select,
+  button,
+  .tag,
+  .pill,
+  .badge-over,
+  .badge-buy {
+    max-width: 100%;
+  }
+}
+
 <style>
 html{font-size:16px}
 body{margin:0;background:#f3f4f6;color:#111827}
