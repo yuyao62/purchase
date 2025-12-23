@@ -7,107 +7,231 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-/* ===== 手機版：禁止任何橫向捲動（最終定案） ===== */
+<style>
+/* =================================================
+   ✅ 手機版最優先：禁止任何橫向捲動（最終定案）
+   ================================================= */
 html, body {
   max-width: 100%;
-  overflow-x: hidden; /* ⛔ 整頁禁止左右滑 */
+  overflow-x: hidden;   /* ⛔ 不允許左右滑 */
+  margin: 0;
+  padding: 0;
+  font-size: 16px;
+  background: #f3f4f6;
+  color: #111827;
 }
 
-/* 手機版強制所有元素不撐寬 */
-@media (max-width: 520px) {
-  * {
-    max-width: 100%;
-    box-sizing: border-box;
-  }
-
-  /* 表格或容器一律不給橫向 scroll */
-  .table-wrap,
-  table {
-    overflow-x: hidden !important;
-  }
-
-  /* 防止 input / tag / badge 撐寬 */
-  input,
-  select,
-  button,
-  .tag,
-  .pill,
-  .badge-over,
-  .badge-buy {
-    max-width: 100%;
-  }
+* {
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
-<style>
-html{font-size:16px}
-body{margin:0;background:#f3f4f6;color:#111827}
-body.lock{overflow:hidden}
-.app{max-width:1100px;margin:20px auto;background:#fff;padding:24px;border-radius:20px;box-shadow:0 18px 40px rgba(0,0,0,.12)}
-h1{text-align:center;margin:0}
-.subtitle{text-align:center;color:#6b7280;font-size:14px;margin-bottom:16px}
-.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:12px}
-label{font-weight:800}
-input,select{padding:8px 14px;border-radius:999px;border:1px solid #d1d5db;font-size:16px}
-button{padding:8px 18px;border-radius:999px;border:none;font-weight:800;cursor:pointer;background:#4f46e5;color:#fff}
-.secondary-btn{background:#111827}
-.emergency-btn{background:#dc2626}
-.ghost-btn{background:#e5e7eb;color:#111827}
+/* =================================================
+   基本版面
+   ================================================= */
+.app{
+  width: min(1100px, 100%);
+  margin: 16px auto;
+  background: #fff;
+  padding: 16px;
+  border-radius: 16px;
+  box-shadow: 0 12px 28px rgba(0,0,0,.12);
+}
 
-.pill{padding:4px 12px;border-radius:999px;font-weight:800;font-size:14px}
-.pill-total{background:#dbeafe}
-.pill-buy{background:#fee2e2}
-.pill-ok{background:#dcfce7}
-.pill-over{background:#ede9fe;color:#4c1d95}
+h1{
+  text-align:center;
+  margin:0 0 8px;
+}
 
-#overNotice{display:none;background:#ede9fe;color:#4c1d95;
-  padding:10px 14px;border-radius:14px;font-weight:900;cursor:pointer}
-#overNotice:hover{background:#ddd6fe}
+.subtitle{
+  text-align:center;
+  color:#6b7280;
+  font-size:14px;
+  margin-bottom:12px;
+}
 
-table{width:100%;border-collapse:collapse}
-th,td{padding:8px}
-th{background:#e5e7eb}
-tr:nth-child(even) td{background:#f3f4f6}
+.row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:center;
+  margin-bottom:10px;
+}
 
-.tag{padding:4px 10px;border-radius:999px;font-weight:800;font-size:14px}
-.tag-ok{background:#dcfce7}
-.tag-buy{background:#fee2e2;color:#991b1b}
-.tag-over{background:#ede9fe;color:#5b21b6}
-.tag-empty{background:#e5e7eb}
+label{ font-weight:800; }
 
-.stock-wrap{display:flex;flex-direction:column;gap:6px}
-.stock-top{display:flex;gap:6px;align-items:center}
-.note-input{border-radius:10px;padding:6px 10px;border:1px solid #d1d5db}
-.note-del{display:none;background:#ef4444;color:#fff;border:none;border-radius:8px;padding:6px 10px;font-weight:900}
-body.admin .note-del{display:inline-block}
+input, select, button{
+  font-size:16px;
+  padding:8px 12px;
+  border-radius:999px;
+  border:1px solid #d1d5db;
+  max-width:100%;
+}
 
-.fullscreen{display:none;height:100dvh;background:#0b1220;color:#fff;overflow:auto;padding:16px}
-.panel{max-width:980px;margin:auto}
-.vendor-group{background:#020617;padding:6px 10px;border-radius:10px;margin-top:16px;font-weight:900}
-.line{background:rgba(17,24,39,.4);padding:10px;border-radius:12px;margin-bottom:8px}
-.badge-over{background:#ddd6fe;color:#4c1d95;padding:4px 10px;border-radius:999px;font-weight:900}
+button{
+  background:#4f46e5;
+  color:#fff;
+  font-weight:800;
+  border:none;
+  cursor:pointer;
+}
+
+.secondary-btn{ background:#111827; }
+.ghost-btn{ background:#e5e7eb; color:#111827; }
+
+/* =================================================
+   勿忘我公告條
+   ================================================= */
+#overNotice{
+  display:none;
+  margin-bottom:12px;
+  padding:10px 14px;
+  border-radius:14px;
+  background:#ede9fe;
+  color:#4c1d95;
+  font-weight:900;
+  cursor:pointer;
+}
+#overNotice:hover{ background:#ddd6fe; }
+
+/* =================================================
+   統計 pill
+   ================================================= */
+.pill{
+  padding:4px 12px;
+  border-radius:999px;
+  font-size:14px;
+  font-weight:800;
+}
+.pill-total{ background:#dbeafe; }
+.pill-buy{ background:#fee2e2; color:#991b1b; }
+.pill-ok{ background:#dcfce7; color:#166534; }
+.pill-over{ background:#ede9fe; color:#4c1d95; }
+
+/* =================================================
+   表格（手機不卡寬）
+   ================================================= */
+.table-wrap{
+  width:100%;
+  overflow-x:hidden; /* ⛔ 不准左右滑 */
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  table-layout:fixed;
+}
+
+th, td{
+  padding:8px;
+  vertical-align:top;
+  word-break:break-word;
+}
+
+th{ background:#e5e7eb; }
+tr:nth-child(even) td{ background:#f3f4f6; }
+
+/* =================================================
+   標籤
+   ================================================= */
+.tag{
+  display:inline-block;
+  padding:4px 10px;
+  border-radius:999px;
+  font-weight:800;
+  font-size:14px;
+}
+.tag-empty{ background:#e5e7eb; }
+.tag-ok{ background:#dcfce7; color:#166534; }
+.tag-buy{ background:#fee2e2; color:#991b1b; }
+.tag-over{ background:#ede9fe; color:#5b21b6; }
+
+/* =================================================
+   庫存欄位（庫存＋備註＋手動勿忘我）
+   ================================================= */
+.stock-wrap{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.stock-top{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+
+.note-input{
+  width:100%;
+  padding:6px 10px;
+  border-radius:10px;
+  border:1px solid #d1d5db;
+  font-size:14px;
+}
+
+/* =================================================
+   手機版微調（仍然只有上下滑）
+   ================================================= */
+@media (max-width:520px){
+  .app{
+    margin:0;
+    border-radius:0;
+    box-shadow:none;
+  }
+
+  table, thead, tbody, tr, td, th{
+    display:block;
+    width:100%;
+  }
+
+  thead{ display:none; }
+
+  tr{
+    background:#fff;
+    border-radius:14px;
+    padding:10px;
+    margin-bottom:10px;
+  }
+
+  td{
+    padding:4px 0;
+  }
+
+  td::before{
+    font-weight:900;
+    color:#6b7280;
+    display:block;
+    margin-bottom:2px;
+  }
+
+  td:nth-child(1)::before{ content:"藥代"; }
+  td:nth-child(2)::before{ content:"藥品"; }
+  td:nth-child(3)::before{ content:"用量"; }
+  td:nth-child(4)::before{ content:"庫存"; }
+}
 </style>
 </head>
 
 <body>
 
-<div class="app" id="mainApp">
+<div class="app">
   <h1>藥品採購查詢系統</h1>
   <div class="subtitle">每月一檔 inventory_YYYY_MM.json</div>
 
+  <!-- 🌸 勿忘我公告 -->
   <div id="overNotice"></div>
 
   <div class="row">
-    <label>年份</label><select id="yearSelect"></select>
-    <label>用量</label>
-    <select id="startMonth"></select> 到
-    <select id="endMonth"></select>
-    <button id="reloadBtn" class="secondary-btn">重新載入</button>
-    <label><input type="checkbox" id="adminMode"> 管理者</label>
-  </div>
+    <label>年份</label>
+    <select id="yearSelect"></select>
 
-  <div class="row">
-    <button id="resetBtn">重置</button>
-    <button id="openOverBtn" class="secondary-btn">🌸 勿忘我清單</button>
+    <label>月份</label>
+    <select id="startMonth"></select>
+    到
+    <select id="endMonth"></select>
+
+    <button id="reloadBtn" class="secondary-btn">重新載入</button>
   </div>
 
   <div class="row">
@@ -117,157 +241,161 @@ body.admin .note-del{display:inline-block}
     <span class="pill pill-over" id="overCount"></span>
   </div>
 
-  <table>
-    <thead>
-      <tr><th>藥代</th><th>藥品</th><th>用量</th><th>庫存</th></tr>
-    </thead>
-    <tbody id="drugBody"></tbody>
-  </table>
-</div>
-
-<div id="overScreen" class="fullscreen">
-  <div class="panel">
-    <button class="ghost-btn" id="backBtn">返回</button>
-    <h2>🌸 勿忘我｜庫存過高清單</h2>
-    <div id="overList"></div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>藥代</th>
+          <th>藥品</th>
+          <th>用量</th>
+          <th>庫存</th>
+        </tr>
+      </thead>
+      <tbody id="drugBody"></tbody>
+    </table>
   </div>
 </div>
 
 <script>
 (() => {
-const $ = id => document.getElementById(id);
-let rawData=[];
+  const $ = id => document.getElementById(id);
 
-/* ===== storage ===== */
-const STOCK_KEY="drug_stock_v1";
-const NOTE_KEY="drug_note_v1";
-const MANUAL_KEY="manual_over_v1";
+  let rawData = [];
 
-const getLS=k=>JSON.parse(localStorage.getItem(k)||"{}");
-const setLS=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+  const STOCK_KEY = "drug_stock_v1";
+  const MANUAL_KEY = "manual_over_v1";
 
-let stockLS=getLS(STOCK_KEY);
-let noteLS=getLS(NOTE_KEY);
-let manualLS=getLS(MANUAL_KEY);
+  const stock = JSON.parse(localStorage.getItem(STOCK_KEY) || "{}");
+  const manual = JSON.parse(localStorage.getItem(MANUAL_KEY) || "{}");
 
-/* ===== UI ===== */
-function initYM(){
-  const y=new Date().getFullYear();
-  [y-1,y,y+1].forEach(v=>{
-    const o=new Option(v,v);$("yearSelect").appendChild(o);
-  });
-  for(let i=1;i<=12;i++){
-    $("startMonth").appendChild(new Option(i,i));
-    $("endMonth").appendChild(new Option(i,i));
+  /* ===== 年份：只顯示目前年度 ===== */
+  function initYear(){
+    const y = new Date().getFullYear();
+    $("yearSelect").innerHTML = "";
+    const o = new Option(y, y);
+    o.selected = true;
+    $("yearSelect").appendChild(o);
   }
-  const m=new Date().getMonth()+1;
-  $("startMonth").value=m;$("endMonth").value=m;
-}
 
-/* ===== data ===== */
-const fileName=(y,m)=>`inventory_${y}_${String(m).padStart(2,"0")}.json`;
-
-async function loadData(){
-  const y=$("yearSelect").value;
-  rawData=[];
-  for(let m=1;m<=12;m++){
-    try{
-      const r=await fetch(fileName(y,m),{cache:"no-store"});
-      if(!r.ok)continue;
-      const rows=await r.json();
-      rows.forEach(x=>{
-        const code=x["藥代"];
-        let rec=rawData.find(r=>r.藥代===code);
-        if(!rec){
-          rec={藥代:code,藥品:x["藥品"],用量:0};
-          rawData.push(rec);
-        }
-        rec[`m${m}`]=Number(x["月用量"]||0);
-      });
-    }catch{}
-  }
-  render();
-}
-
-function calcUsage(x){
-  let s=+$("startMonth").value,e=+$("endMonth").value,sum=0;
-  for(let i=s;i<=e;i++) sum+=x[`m${i}`]||0;
-  return sum;
-}
-
-function isOver(x){
-  if(manualLS[x.藥代])return true;
-  const u=calcUsage(x);
-  const st=stockLS[x.藥代];
-  return u>0 && st!=null && st>u*6;
-}
-
-/* ===== render ===== */
-function render(){
-  const tb=$("drugBody");tb.innerHTML="";
-  let overCnt=0,need=0,ok=0;
-  rawData.forEach(x=>{
-    const u=calcUsage(x);
-    const st=stockLS[x.藥代];
-    const over=isOver(x);
-    if(over)overCnt++;
-    if(st!=null && u>st)need++; else if(st!=null)ok++;
-
-    const tr=document.createElement("tr");
-    tr.innerHTML=`
-      <td>${x.藥代}</td>
-      <td>${x.藥品}</td>
-      <td>${u}</td>
-      <td>
-        <div class="stock-wrap">
-          <div class="stock-top">
-            <input type="number" value="${st??""}">
-            ${over?'<span class="tag tag-over">庫存過高</span>':(st==null?'<span class="tag tag-empty">未輸入</span>':'<span class="tag tag-ok">正常</span>')}
-          </div>
-          <input class="note-input" placeholder="備註" value="${noteLS[x.藥代]||""}">
-          <label><input type="checkbox" ${manualLS[x.藥代]?"checked":""}> 手動勿忘我</label>
-        </div>
-      </td>`;
-    const [stInp,noteInp,chk]=tr.querySelectorAll("input");
-    stInp.oninput=()=>{stockLS[x.藥代]=+stInp.value;setLS(STOCK_KEY,stockLS);render();}
-    noteInp.oninput=()=>{noteLS[x.藥代]=noteInp.value;setLS(NOTE_KEY,noteLS);}
-    chk.onchange=()=>{ if(!$("adminMode").checked){chk.checked=!!manualLS[x.藥代];return;}
-      chk.checked?manualLS[x.藥代]=1:delete manualLS[x.藥代];
-      setLS(MANUAL_KEY,manualLS);render();
+  function initMonths(){
+    for(let i=1;i<=12;i++){
+      $("startMonth").appendChild(new Option(i,i));
+      $("endMonth").appendChild(new Option(i,i));
     }
-    tb.appendChild(tr);
-  });
+    const m = new Date().getMonth()+1;
+    $("startMonth").value = m;
+    $("endMonth").value = m;
+  }
 
-  $("totalCount").textContent=`共 ${rawData.length}`;
-  $("needBuyCount").textContent=`需採購 ${need}`;
-  $("okCount").textContent=`正常 ${ok}`;
-  $("overCount").textContent=`勿忘我 ${overCnt}`;
+  const fileName = (y,m)=>`inventory_${y}_${String(m).padStart(2,"0")}.json`;
 
-  if(overCnt){
-    $("overNotice").style.display="block";
-    $("overNotice").innerHTML=`🌸 勿忘我 ${overCnt} 筆｜點此查看`;
-  }else $("overNotice").style.display="none";
-}
+  async function loadData(){
+    rawData = [];
+    const y = $("yearSelect").value;
 
-/* ===== events ===== */
-$("reloadBtn").onclick=loadData;
-$("resetBtn").onclick=()=>{ $("startMonth").value=$("endMonth").value=new Date().getMonth()+1; render(); }
-$("openOverBtn").onclick=()=>{ $("mainApp").style.display="none";$("overScreen").style.display="block";
-  const l=$("overList");l.innerHTML="";
-  rawData.filter(isOver).forEach(x=>{
-    const d=document.createElement("div");
-    d.className="line";
-    d.innerHTML=`${x.藥代} ${x.藥品} <span class="badge-over">庫存過高</span>`;
-    l.appendChild(d);
-  });
-}
-$("backBtn").onclick=()=>{$("overScreen").style.display="none";$("mainApp").style.display="block";}
-$("overNotice").onclick=$("openOverBtn").onclick;
+    for(let m=1;m<=12;m++){
+      try{
+        const r = await fetch(fileName(y,m), {cache:"no-store"});
+        if(!r.ok) continue;
+        const rows = await r.json();
+        rows.forEach(x=>{
+          let rec = rawData.find(r=>r.藥代===x["藥代"]);
+          if(!rec){
+            rec = {藥代:x["藥代"], 藥品:x["藥品"]};
+            rawData.push(rec);
+          }
+          rec[`m${m}`] = Number(x["月用量"]||0);
+        });
+      }catch{}
+    }
+    render();
+  }
 
-/* ===== start ===== */
-initYM();
-loadData();
+  function usage(x){
+    let s=+$("startMonth").value, e=+$("endMonth").value, sum=0;
+    for(let i=s;i<=e;i++) sum += x[`m${i}`]||0;
+    return sum;
+  }
+
+  function isOver(x){
+    if(manual[x.藥代]) return true;
+    const u = usage(x);
+    const st = stock[x.藥代];
+    return u>0 && st!=null && st>u*6;
+  }
+
+  function render(){
+    const tb = $("drugBody");
+    tb.innerHTML = "";
+
+    let over=0, need=0, ok=0;
+
+    rawData.forEach(x=>{
+      const u = usage(x);
+      const st = stock[x.藥代];
+      const overFlag = isOver(x);
+      if(overFlag) over++;
+      if(st!=null && u>st) need++;
+      else if(st!=null) ok++;
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${x.藥代}</td>
+        <td>${x.藥品}</td>
+        <td>${u}</td>
+        <td>
+          <div class="stock-wrap">
+            <div class="stock-top">
+              <input type="number" value="${st??""}">
+              ${overFlag?'<span class="tag tag-over">庫存過高</span>':
+                st==null?'<span class="tag tag-empty">未輸入</span>':
+                '<span class="tag tag-ok">正常</span>'}
+            </div>
+            <label>
+              <input type="checkbox" ${manual[x.藥代]?"checked":""}>
+              手動勿忘我
+            </label>
+          </div>
+        </td>
+      `;
+
+      const [inp, chk] = tr.querySelectorAll("input");
+      inp.oninput = ()=>{
+        stock[x.藥代] = inp.value===""?null:+inp.value;
+        localStorage.setItem(STOCK_KEY, JSON.stringify(stock));
+        render();
+      };
+      chk.onchange = ()=>{
+        chk.checked ? manual[x.藥代]=1 : delete manual[x.藥代];
+        localStorage.setItem(MANUAL_KEY, JSON.stringify(manual));
+        render();
+      };
+
+      tb.appendChild(tr);
+    });
+
+    $("totalCount").textContent = `共 ${rawData.length}`;
+    $("needBuyCount").textContent = `需採購 ${need}`;
+    $("okCount").textContent = `正常 ${ok}`;
+    $("overCount").textContent = `勿忘我 ${over}`;
+
+    if(over){
+      $("overNotice").style.display="block";
+      $("overNotice").textContent = `🌸 勿忘我 ${over} 筆`;
+    }else{
+      $("overNotice").style.display="none";
+    }
+  }
+
+  $("reloadBtn").onclick = loadData;
+  $("startMonth").onchange = render;
+  $("endMonth").onchange = render;
+
+  initYear();
+  initMonths();
+  loadData();
 })();
 </script>
+
 </body>
 </html>
