@@ -98,7 +98,7 @@ tr:nth-child(even) td{ background:#f3f4f6; }
   </div>
 
   <div id="overList" style="margin-top:16px; display:none;">
-    <h3>🌸 勿忘我清單</h3>
+    <h3>🌸 公告清單</h3>
     <ul id="overListBody"></ul>
   </div>
 </div>
@@ -229,11 +229,11 @@ tr:nth-child(even) td{ background:#f3f4f6; }
     $("totalCount").textContent = `共 ${rawData.length}`;
     $("needBuyCount").textContent = `需採購 ${need}`;
     $("okCount").textContent = `正常 ${ok}`;
-    $("overCount").textContent = `勿忘我 ${over}`;
+    $("overCount").textContent = `公告 ${over}`;
 
     if(over){
       $("overNotice").style.display="block";
-      $("overNotice").textContent = `🌸 勿忘我 ${over} 筆`;
+      $("overNotice").textContent = `🌸 公告 ${over} 筆`;
     }else{
       $("overNotice").style.display="none";
     }
