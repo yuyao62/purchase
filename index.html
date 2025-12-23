@@ -203,9 +203,11 @@ tr:nth-child(even) td{ background:#f3f4f6; }
           <div class="stock-wrap">
             <div class="stock-top">
               <input type="number" value="${st??""}">
-              ${overFlag?'<span class="tag tag-over">庫存過高</span>':
-                st==null?'<span class="tag tag-empty">未輸入</span>':
-                '<span class="tag tag-ok">正常</span>'}
+              ${overFlag ? '<span class="tag tag-over">庫存過高</span>' :
+               st == null ? '<span class="tag tag-empty">未輸入</span>' :
+               u > st ? '<span class="tag tag-buy">需採購</span>' :
+               '<span class="tag tag-ok">正常</span>'}
+
             </div>
             <input class="note-input" placeholder="備註" value="${notes[x.藥代]??""}">
           </div>
