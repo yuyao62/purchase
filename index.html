@@ -1,3 +1,4 @@
+```html
 <!doctype html>
 <html lang="zh-Hant">
 <head>
@@ -5,9 +6,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>藥品採購查詢系統（單檔內嵌版）</title>
 
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
+/* ===== 全站基準字體：讓上/下半部一致 ===== */
 html{ font-size:16px; }
 body{
   margin:0;
@@ -17,6 +20,7 @@ body{
   color:#111827;
 }
 body.lock{ overflow:hidden; }
+body.admin{ } /* 管理者模式用（目前用來顯示刪除鈕） */
 
 .app{
   width:min(1100px,100%);
@@ -78,6 +82,49 @@ td.col-stock input{ width:80px; text-align:center; border-radius:10px; }
 .tag-buy{ background:#fee2e2; color:#b91c1c; }
 .tag-ok{ background:#dcfce7; color:#166534; }
 
+/* ✅ 庫存過高：紫色標籤 */
+.tag-over{
+  background:#ede9fe;
+  color:#5b21b6;
+  border:1px solid #ddd6fe;
+}
+
+/* ✅ 庫存格內共存：庫存+標籤 + 備註 */
+.stock-wrap{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.stock-top{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex-wrap:wrap;
+}
+.note-row{
+  display:flex;
+  gap:6px;
+  align-items:center;
+}
+.note-input{
+  flex:1;
+  border-radius:10px;
+  border:1px solid #d1d5e0;
+  padding:6px 10px;
+  font-size:14px;
+}
+.note-del{
+  display:none;
+  border:none;
+  border-radius:10px;
+  padding:6px 10px;
+  cursor:pointer;
+  background:#ef4444;
+  color:#fff;
+  font-weight:900;
+}
+body.admin .note-del{ display:inline-block; }
+
 @media (max-width:520px){
   .app{ width:100%; margin:0; padding:12px; border-radius:0; box-shadow:none; }
   h1{ font-size:26px; }
@@ -89,7 +136,7 @@ td.col-stock input{ width:80px; text-align:center; border-radius:10px; }
 
   tr{
     display:grid;
-    grid-template-columns:minmax(0,1fr) 120px;
+    grid-template-columns:minmax(0,1fr) 140px;
     grid-template-areas:
       "code right"
       "drug right"
@@ -119,23 +166,36 @@ td.col-stock input{ width:80px; text-align:center; border-radius:10px; }
 
   td.col-stock{
     grid-area:right;
-    display:flex; align-items:center; justify-content:flex-end; gap:6px;
-    min-height:48px; align-self:stretch; min-width:0; max-width:100%;
+    display:flex;
+    align-items:flex-start;
+    justify-content:flex-end;
+    min-height:48px;
+    align-self:stretch;
+    min-width:0;
+    max-width:100%;
   }
   td.col-status{ display:none; }
-  td.col-stock input{
+
+  td.col-stock .stock-wrap{ width:100%; }
+  td.col-stock .stock-top{ justify-content:flex-end; }
+  td.col-stock .stock-top input{
     width:68px; max-width:100%; min-height:36px; font-size:16px; text-align:center;
     touch-action:manipulation;
   }
   td.col-stock .tag{
-    max-width:52px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    max-width:90px;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
     font-size:14px;
     padding:4px 6px;
+  }
+  td.col-stock .note-input{
+    font-size:14px;
+    padding:6px 10px;
   }
   #searchInput{ font-size:16px; padding:10px 16px; }
 }
 
-/* ===== 緊急 modal ===== */
+/* ===== 緊急 / 公告 modal ===== */
 .modal{
   display:none;
   position:fixed;
@@ -244,24 +304,16 @@ td.col-stock input{ width:80px; text-align:center; border-radius:10px; }
 
 <body>
 
-<!-- ✅ 你只要改這段資料。每個月的 JSON 陣列「原封不動貼進去」 -->
+<!-- ✅ 單檔內嵌資料：把你每月 JSON 放進對應月份（只放有的月份即可） -->
 <script id="INVENTORY_DATA" type="application/json">
 {
   "2025": {
-    "7": [
-      /* ① 把 inventory_2025_07.json 的整包陣列內容貼在這裡（去掉最外層 [] 也可以，但最穩是逐筆貼） */
-      /* 範例（請刪掉換成你的）： */
-      { "藥代":"DEMO1", "藥品":"示範藥品7月", "廠商":"示範廠商", "月用量": 100 }
-    ],
-    "8": [
-      /* ② 把 inventory_2025_08.json 貼這裡 */
-      { "藥代":"DEMO1", "藥品":"示範藥品8月", "廠商":"示範廠商", "月用量": 120 }
-    ],
     "9": [
-      /* ③ 把 inventory_2025_09.json 貼這裡（你截圖那份） */
-      { "藥代":"MYWE2", "藥品":"GACID TABLETS \"H.S.\"", "廠商":"未標示廠商", "月用量": 6579.0 },
-      { "藥代":"ROTY5", "藥品":"ROTY(5) 中化ROSUVASTATIN", "廠商":"未標示廠商", "月用量": 5620.0 }
-    ]
+      { "藥代":"MYWE2", "藥品":"GACID TABLETS \"H.S.\"", "廠商":"未標示廠商", "月用量":6579.0 },
+      { "藥代":"ROTY5", "藥品":"ROTY(5) 中化ROSUVASTATIN", "廠商":"未標示廠商", "月用量":5620.0 }
+    ],
+    "10": [],
+    "11": []
   }
 }
 </script>
@@ -301,6 +353,7 @@ td.col-stock input{ width:80px; text-align:center; border-radius:10px; }
     <button id="emergencyBtn" class="emergency-btn">緊急</button>
     <label><input type="checkbox" id="needBuyOnly"> 只顯示需採購（勾選自動跳頁）</label>
     <button id="openBuyScreenBtn" class="secondary-btn">需採購清單（另一畫面）</button>
+    <label style="margin-left:auto;"><input type="checkbox" id="adminMode"> 管理者模式</label>
   </div>
 
   <div class="row">
@@ -345,10 +398,22 @@ td.col-stock input{ width:80px; text-align:center; border-radius:10px; }
   </div>
 </div>
 
+<!-- 緊急 -->
 <div id="emergencyModal" class="modal">
   <div style="text-align:center; padding: 16px">
     <h1>⚠️ 請洽店長</h1>
     <button onclick="document.getElementById('emergencyModal').style.display='none'">我知道了</button>
+  </div>
+</div>
+
+<!-- ✅ 庫存過高公告：勿忘我（只跳一次） -->
+<div id="overStockModal" class="modal">
+  <div style="text-align:center; padding: 16px">
+    <h1>🌸 勿忘我</h1>
+    <div style="font-size:18px; margin-bottom:16px; color:#ffe4e6;">
+      庫存量已超過「單月用量 × 6」
+    </div>
+    <button onclick="document.getElementById('overStockModal').style.display='none'">我知道了</button>
   </div>
 </div>
 
@@ -360,6 +425,29 @@ document.addEventListener("touchstart", ()=>{}, {passive:true});
   let chart;
   let missingFiles = [];
   let DB = {};
+
+  // ✅ 勿忘我只跳一次：記錄已跳過的藥代
+  let overStockPopped = new Set();
+
+  // ===== 備註：和點庫存共存（localStorage）=====
+  const NOTE_KEY = "drug_note_v1";
+  function loadNotes(){
+    try{ return JSON.parse(localStorage.getItem(NOTE_KEY) || "{}"); }
+    catch(e){ return {}; }
+  }
+  function saveNotes(obj){
+    localStorage.setItem(NOTE_KEY, JSON.stringify(obj));
+  }
+  let notes = loadNotes();
+  function getNote(code){ return String(notes[String(code)] ?? ""); }
+  function setNote(code, text){
+    notes[String(code)] = String(text ?? "");
+    saveNotes(notes);
+  }
+  function deleteNote(code){
+    delete notes[String(code)];
+    saveNotes(notes);
+  }
 
   const $ = id => document.getElementById(id);
 
@@ -490,11 +578,26 @@ document.addEventListener("touchstart", ()=>{}, {passive:true});
     rawData.forEach(updateNeedFlag);
   }
 
+  // ✅ 依你定義：6個月用量 = 單月用量 * 6（單月用量=目前顯示用量）
+  function isOverSixMonthsStock(x){
+    if (x.庫存量 == null) return false;
+    const singleMonthUsage = Number(x._用量合計);
+    if(!Number.isFinite(singleMonthUsage) || singleMonthUsage <= 0) return false;
+    const six = singleMonthUsage * 6;
+    return x.庫存量 > six;
+  }
+
   function makeTag(x){
     if(x.庫存量==null) return '<span class="tag tag-empty">未輸入</span>';
     return x.需採購
       ? '<span class="tag tag-buy">需採購</span>'
       : '<span class="tag tag-ok">足夠</span>';
+  }
+
+  function makeOverTag(x){
+    return (x.庫存量!=null && isOverSixMonthsStock(x))
+      ? '<span class="tag tag-over">庫存過高</span>'
+      : '';
   }
 
   function renderStats(list){
@@ -525,17 +628,37 @@ document.addEventListener("touchstart", ()=>{}, {passive:true});
         <td class="col-drug">${x.藥品}</td>
         <td class="col-usage">${x._用量合計}</td>
         <td class="col-stock">
-          <input type="number" inputmode="numeric" value="${x.庫存量??""}">
-          ${makeTag(x)}
+          <div class="stock-wrap">
+            <div class="stock-top">
+              <input type="number" inputmode="numeric" value="${x.庫存量??""}">
+              ${makeTag(x)}
+              ${makeOverTag(x)}
+            </div>
+            <div class="note-row">
+              <input class="note-input" type="text" placeholder="備註" value="${getNote(x.藥代)}">
+              <button class="note-del" title="刪除備註">刪</button>
+            </div>
+          </div>
         </td>
         <td class="col-status"></td>
       `;
 
-      const inp = tr.querySelector("input");
-      inp.addEventListener("input", ()=>{
-        x.庫存量 = inp.value==="" ? null : +inp.value;
+      // 庫存輸入
+      const stockInput = tr.querySelector(".stock-top input");
+      stockInput.addEventListener("input", ()=>{
+        x.庫存量 = stockInput.value==="" ? null : +stockInput.value;
         updateNeedFlag(x);
-        tr.querySelector(".tag").outerHTML = makeTag(x);
+
+        // 重新渲染標籤（同一格有多個 tag，統一重建）
+        const top = tr.querySelector(".stock-top");
+        top.querySelectorAll(".tag").forEach(el => el.remove());
+        top.insertAdjacentHTML("beforeend", makeTag(x) + makeOverTag(x));
+
+        // ✅ 勿忘我：庫存過高只跳一次
+        if (isOverSixMonthsStock(x) && !overStockPopped.has(x.藥代)) {
+          overStockPopped.add(x.藥代);
+          document.getElementById("overStockModal").style.display = "flex";
+        }
 
         persistStock();
         renderStats(list);
@@ -543,8 +666,23 @@ document.addEventListener("touchstart", ()=>{}, {passive:true});
         if (isBuyScreenOpen()) openBuyScreen();
       });
 
+      // 備註輸入（和庫存共存）
+      const noteInput = tr.querySelector(".note-input");
+      noteInput.addEventListener("input", ()=>{
+        setNote(x.藥代, noteInput.value);
+      });
+
+      // 管理者刪除備註
+      const delBtn = tr.querySelector(".note-del");
+      delBtn.addEventListener("click", ()=>{
+        if (!document.body.classList.contains("admin")) return;
+        deleteNote(x.藥代);
+        noteInput.value = "";
+      });
+
       $("drugBody").appendChild(tr);
     });
+
     renderStats(list);
   }
 
@@ -685,7 +823,9 @@ document.addEventListener("touchstart", ()=>{}, {passive:true});
     });
   }
 
-  function closeBuyScreen(){ showMainPage(); }
+  function closeBuyScreen(){
+    showMainPage();
+  }
 
   function downloadFile(filename, mime, content){
     const blob = new Blob([content], {type:mime});
@@ -699,9 +839,14 @@ document.addEventListener("touchstart", ()=>{}, {passive:true});
     URL.revokeObjectURL(url);
   }
 
+  // ✅ CSV 匯出：加「超過6個月」欄位
   function exportNeedBuyCSV(){
-    const list = getNeedBuyList();
-    const header = ["藥代","藥品","廠商","用量合計","庫存量","建議採購量"];
+    const list = getNeedBuyList().map(r => ({
+      ...r,
+      "超過6個月": (Number(r.庫存量 ?? 0) > Number(r.用量合計 ?? 0) * 6) ? "是" : "否"
+    }));
+
+    const header = ["藥代","藥品","廠商","用量合計","庫存量","建議採購量","超過6個月"];
     const esc = v => {
       const s = (v==null) ? "" : String(v);
       return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
@@ -779,6 +924,7 @@ document.addEventListener("touchstart", ()=>{}, {passive:true});
     filter();
   }
 
+  // ===== 事件 =====
   $("searchInput").addEventListener("input", ()=>{
     clearTimeout(window._t);
     window._t = setTimeout(()=>{
@@ -801,8 +947,15 @@ document.addEventListener("touchstart", ()=>{}, {passive:true});
     if ($("needBuyOnly").checked) openBuyScreen();
   });
 
-  $("yearSelect").addEventListener("change", loadMonthlyDataFromEmbedded);
-  $("reloadBtn").addEventListener("click", loadMonthlyDataFromEmbedded);
+  $("yearSelect").addEventListener("change", ()=>{
+    overStockPopped.clear();
+    loadMonthlyDataFromEmbedded();
+  });
+
+  $("reloadBtn").addEventListener("click", ()=>{
+    overStockPopped.clear();
+    loadMonthlyDataFromEmbedded();
+  });
 
   $("needBuyOnly").addEventListener("change", ()=>{
     filter();
@@ -817,6 +970,8 @@ document.addEventListener("touchstart", ()=>{}, {passive:true});
   $("saveJSONBtn").addEventListener("click", exportNeedBuyJSON);
 
   $("resetBtn").addEventListener("click", ()=>{
+    overStockPopped.clear();
+
     $("vendorSelect").value = "";
     $("searchInput").value = "";
     $("needBuyOnly").checked = false;
@@ -829,6 +984,10 @@ document.addEventListener("touchstart", ()=>{}, {passive:true});
     if (isBuyScreenOpen()) closeBuyScreen();
   });
 
+  $("adminMode").addEventListener("change", ()=>{
+    document.body.classList.toggle("admin", $("adminMode").checked);
+  });
+
   $("emergencyBtn").addEventListener("click", ()=>{
     $("emergencyModal").style.display = "flex";
   });
@@ -836,6 +995,7 @@ document.addEventListener("touchstart", ()=>{}, {passive:true});
   document.addEventListener("keydown", (e)=>{
     if(e.key === "Escape"){
       $("emergencyModal").style.display = "none";
+      $("overStockModal").style.display = "none";
       if(isBuyScreenOpen()) closeBuyScreen();
     }
   });
@@ -843,7 +1003,11 @@ document.addEventListener("touchstart", ()=>{}, {passive:true});
   $("emergencyModal").addEventListener("click", (e)=>{
     if(e.target.id === "emergencyModal") $("emergencyModal").style.display = "none";
   });
+  $("overStockModal").addEventListener("click", (e)=>{
+    if(e.target.id === "overStockModal") $("overStockModal").style.display = "none";
+  });
 
+  // ===== 啟動 =====
   initYearMonthUI();
   loadMonthlyDataFromEmbedded();
 })();
@@ -851,3 +1015,4 @@ document.addEventListener("touchstart", ()=>{}, {passive:true});
 
 </body>
 </html>
+```
