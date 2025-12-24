@@ -277,7 +277,6 @@ th,td{padding:8px;vertical-align:top;word-break:break-word} th{background:#e5e7e
     const s=Math.min(a,b), e=Math.max(a,b);
     const monthCount=(e-s+1);
 
-    // 讀取區間每月，累加用量；多月時用「平均月用量」做 6 個月判斷
     const agg=new Map();
 
     for(let m=s;m<=e;m++){
@@ -337,7 +336,6 @@ th,td{padding:8px;vertical-align:top;word-break:break-word} th{background:#e5e7e
       if(!vendorMap.has(vKey)) vendorMap.set(vKey,[]);
       vendorMap.get(vKey).push(rec);
 
-      // 外部公告一律視為手動公告
       manual[code] = 1;
       localStorage.setItem(MAN, JSON.stringify(manual));
     });
@@ -423,14 +421,12 @@ th,td{padding:8px;vertical-align:top;word-break:break-word} th{background:#e5e7e
       const manChk   = tr.querySelector('input[type="checkbox"]');
       const noteInp  = tr.querySelector('input.note');
 
-      // 輸入中：只更新狀態（不存檔、不重 render）
       stockInp.oninput = () => {
         stockInp.value = stockInp.value.replace(/\D/g, "");
         const v = stockInp.value === "" ? null : +stockInp.value;
         updateTag(tagEl, v, u, isAnn(r), extFlag);
       };
 
-      // 離開欄位：存檔 + 重算公告/統計
       stockInp.onblur = () => {
         const v = stockInp.value === "" ? null : +stockInp.value;
         stock[r.藥代] = v;
@@ -489,7 +485,8 @@ th,td{padding:8px;vertical-align:top;word-break:break-word} th{background:#e5e7e
     const tb=$("annBody"); tb.innerHTML="";
 
     list.forEach(r=>{
-      const u=Math.round((r.用量||0)*100)/100;
+      const extFlag = isExt(r.藥代);
+      const u = extFlag ? "—" : (Math.round((r.用量||0)*100)/100);
       const st=stock[r.藥代];
       const reason=annReason(r);
       const canDel=adminOn;
@@ -507,7 +504,6 @@ th,td{padding:8px;vertical-align:top;word-break:break-word} th{background:#e5e7e
       tb.appendChild(tr);
     });
 
-    // 刪除公告：移除手動公告；同時忽略自動；若是外部公告也一起刪
     tb.querySelectorAll("[data-del]").forEach(btn=>{
       btn.onclick=()=>{
         const code=btn.getAttribute("data-del");
