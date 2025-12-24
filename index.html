@@ -89,26 +89,23 @@ tr:nth-child(even) td{background:#f3f4f6}
   .mainTable .stockTop input{width:140px}
 }
 
-/* ✅ 手機版：公告明細＝一筆一行（非卡片），左右滑動 */
+/* ✅ 手機版：公告明細/需採購清單＝一筆一行（非卡片），左右滑動 */
 @media (max-width:520px){
   .annTable{
     display:table;
     width:100%;
-    min-width:600px; /* 關鍵：維持一行一筆 */
+    min-width:600px; /* 一行一筆 */
     border-collapse:collapse;
   }
   .annTable thead{display:table-header-group}
   .annTable tbody{display:table-row-group}
   .annTable tr{display:table-row}
-
-  .annTable th,
-  .annTable td{
+  .annTable th,.annTable td{
     display:table-cell;
     padding:6px 8px;
-    font-size:13px;     /* 想更密集可改 12px */
-    white-space:nowrap; /* 不換行，才會一筆一行 */
+    font-size:13px;
+    white-space:nowrap;
   }
-
   .box .table-wrap{overflow-x:auto}
 }
 </style>
@@ -151,6 +148,7 @@ tr:nth-child(even) td{background:#f3f4f6}
     <button id="search">搜尋</button>
     <button id="export" class="btn4">匯出 Excel</button>
     <button id="yearView" class="btn4">年度總覽</button>
+    <button id="buyView" class="btn4">需採購清單</button>
     <button id="admin" class="btn2">管理者</button>
     <button id="addExt" class="btn4" style="display:none">新增外部公告</button>
   </div>
@@ -183,6 +181,32 @@ tr:nth-child(even) td{background:#f3f4f6}
     <table class="annTable">
       <thead><tr><th>藥代</th><th>藥品</th><th>用量</th><th>庫存</th><th>原因</th><th>操作</th></tr></thead>
       <tbody id="annBody"></tbody>
+    </table>
+  </div>
+</div></div>
+
+<!-- ✅ 需採購清單 -->
+<div id="buyModal" class="modal"><div class="box">
+  <div class="boxHead">
+    <div>
+      <h3>需採購清單</h3>
+      <div class="boxSub">每種藥代一行（庫存 < 用量）</div>
+    </div>
+    <button id="buyClose" class="btn3">關閉</button>
+  </div>
+  <div class="table-wrap">
+    <table class="annTable">
+      <thead>
+        <tr>
+          <th>藥代</th>
+          <th>藥品</th>
+          <th>用量</th>
+          <th>庫存</th>
+          <th>建議採購</th>
+          <th>備註</th>
+        </tr>
+      </thead>
+      <tbody id="buyBody"></tbody>
     </table>
   </div>
 </div></div>
@@ -237,6 +261,7 @@ tr:nth-child(even) td{background:#f3f4f6}
   const pad2=n=>String(n).padStart(2,"0");
   const file=(y,m)=>`inventory_${y}_${pad2(m)}.json`;
 
+  // 外部公告判斷（簡單版：若你之前 code 會帶空白，再跟我說我幫你改成 normCode）
   const isExt = (code)=> ext.some(x => x.code === code);
 
   const vendorKey = (s)=>{
@@ -257,11 +282,7 @@ tr:nth-child(even) td{background:#f3f4f6}
 
   function updateTag(el, st, u, ann=false, extFlag=false){
     if(!el) return;
-    if(extFlag){
-      el.className="tag t3";
-      el.textContent="📢 外部公告";
-      return;
-    }
+    if(extFlag){ el.className="tag t3"; el.textContent="📢 外部公告"; return; }
     el.className="tag";
     if(ann){ el.classList.add("t3"); el.textContent="公告"; return; }
     if(st==null || st===""){ el.classList.add("t0"); el.textContent="未輸入"; return; }
@@ -313,6 +334,7 @@ tr:nth-child(even) td{background:#f3f4f6}
       return rec;
     });
 
+    // 合併外部公告（用量=0；公告明細會顯示 —）
     ext.forEach(x=>{
       const code=(x.code||"").trim(), name=(x.name||"").trim();
       if(!code || !name) return;
@@ -392,6 +414,7 @@ tr:nth-child(even) td{background:#f3f4f6}
             <input class="note" placeholder="備註" value="${notes[r.藥代]??""}">
           </div>
         </td>`;
+
       const tagEl=tr.querySelector(".tag");
       const stockInp=tr.querySelector('input[type="number"]');
       const manChk=tr.querySelector('input[type="checkbox"]');
@@ -459,14 +482,55 @@ tr:nth-child(even) td{background:#f3f4f6}
       btn.onclick=()=>{
         const code=btn.getAttribute("data-del");
         const idx=ext.findIndex(x=>x.code===code);
-        if(idx>=0){ ext.splice(idx,1); localStorage.setItem(EXT,JSON.stringify(ext)); delete ignore[code]; localStorage.setItem(IGN,JSON.stringify(ignore)); }
-        else{ ignore[code]=1; localStorage.setItem(IGN,JSON.stringify(ignore)); }
-        delete manual[code]; localStorage.setItem(MAN,JSON.stringify(manual));
-        applyFilters(); openAnnModal();
+        if(idx>=0){
+          ext.splice(idx,1);
+          localStorage.setItem(EXT,JSON.stringify(ext));
+          delete ignore[code];
+          localStorage.setItem(IGN,JSON.stringify(ignore));
+        }else{
+          ignore[code]=1;
+          localStorage.setItem(IGN,JSON.stringify(ignore));
+        }
+        delete manual[code];
+        localStorage.setItem(MAN,JSON.stringify(manual));
+        applyFilters();
+        openAnnModal();
       };
     });
 
     $("modal").style.display="flex";
+  }
+
+  // ✅ 需採購清單：每種藥代一行
+  function openBuyModal(){
+    const tb=$("buyBody");
+    tb.innerHTML="";
+
+    const map=new Map();
+    viewRows.forEach(r=>{
+      const st=stock[r.藥代];
+      const u=Number(r.用量||0);
+      if(st!=null && u>st){
+        if(!map.has(r.藥代)) map.set(r.藥代, r);
+      }
+    });
+
+    [...map.values()].forEach(r=>{
+      const u=Math.round((r.用量||0)*100)/100;
+      const st=Number(stock[r.藥代]);
+      const need=Math.max(0, Math.ceil(u - st));
+      const tr=document.createElement("tr");
+      tr.innerHTML=`
+        <td>${r.藥代}</td>
+        <td class="drugName">${r.藥品}</td>
+        <td>${u}</td>
+        <td>${st}</td>
+        <td>${need}</td>
+        <td>${notes[r.藥代] ?? ""}</td>`;
+      tb.appendChild(tr);
+    });
+
+    $("buyModal").style.display="flex";
   }
 
   function exportExcel(){
@@ -554,7 +618,7 @@ tr:nth-child(even) td{background:#f3f4f6}
     const code=(prompt("外部公告藥代（建議 EXT001 / EXT-xxx）","EXT001")||"").trim();
     if(!code) return;
     if(ext.some(x=>x.code===code) || rows.some(r=>r.藥代===code)) return alert("此藥代已存在，請換一個");
-    const name=(prompt("藥品名稱（只填藥名，別塞庫存/說明）","")||"").trim();
+    const name=(prompt("藥品名稱（只填藥名）","")||"").trim();
     if(!name) return;
     const vendor=(prompt("廠商（可空）","外部公告")||"外部公告").trim();
     ext.push({code,name,vendor,createdAt:Date.now()});
@@ -563,6 +627,7 @@ tr:nth-child(even) td{background:#f3f4f6}
     loadData();
   }
 
+  // events
   $("reload").onclick=loadData;
   $("search").onclick=applyFilters;
   $("q").addEventListener("keydown",e=>{ if(e.key==="Enter") applyFilters(); });
@@ -583,6 +648,10 @@ tr:nth-child(even) td{background:#f3f4f6}
   $("announceBar").onclick=openAnnModal;
   $("close").onclick=()=>$("modal").style.display="none";
   $("modal").onclick=(e)=>{ if(e.target.id==="modal") $("modal").style.display="none"; };
+
+  $("buyView").onclick=openBuyModal;
+  $("buyClose").onclick=()=>$("buyModal").style.display="none";
+  $("buyModal").onclick=(e)=>{ if(e.target.id==="buyModal") $("buyModal").style.display="none"; };
 
   $("export").onclick=exportExcel;
   $("yearView").onclick=yearOverview;
@@ -608,15 +677,14 @@ tr:nth-child(even) td{background:#f3f4f6}
 
   $("addExt").onclick=addExternalAnnounce;
 
+  // ✅ 重置：不刪公告（MAN/IGN/EXT 不動）
   $("reset").onclick=()=>{
     localStorage.removeItem(STOCK);
     localStorage.removeItem(NOTE);
-    localStorage.removeItem(MAN);
-    localStorage.removeItem(IGN);
-    localStorage.removeItem(EXT);
     location.reload();
   };
 
+  // init
   initSelects();
   loadData();
 })();
