@@ -348,7 +348,7 @@ tr:nth-child(even) td{background:#f3f4f6}
       rows.push(rec);
       if(!vendorMap.has(vKey)) vendorMap.set(vKey,[]);
       vendorMap.get(vKey).push(rec);
-      manual[code]=1;
+      
       localStorage.setItem(MAN,JSON.stringify(manual));
     });
 
