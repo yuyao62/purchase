@@ -56,19 +56,11 @@ tr:nth-child(even) td{background:#f3f4f6}
     margin:10px 0;
   }
 
-  .mainTable td{
-    display:block;
-    width:100%;
-    padding:0;
-  }
-
+  .mainTable td{display:block;width:100%;padding:0}
   .mainTable tr:nth-child(even) td{background:transparent}
 
   .mainTable td::before{
-    font-weight:900;
-    color:#6b7280;
-    display:block;
-    margin-bottom:4px;
+    font-weight:900;color:#6b7280;display:block;margin-bottom:4px;
   }
   .mainTable td:nth-child(1)::before{content:"藥代"}
   .mainTable td:nth-child(2)::before{content:"藥品"}
@@ -91,20 +83,12 @@ tr:nth-child(even) td{background:#f3f4f6}
 
 /* ✅ 手機版：公告明細/需採購清單＝一筆一行（非卡片），左右滑動 */
 @media (max-width:520px){
-  .annTable{
-    display:table;
-    width:100%;
-    min-width:600px; /* 一行一筆 */
-    border-collapse:collapse;
-  }
+  .annTable{display:table;width:100%;min-width:600px;border-collapse:collapse;}
   .annTable thead{display:table-header-group}
   .annTable tbody{display:table-row-group}
   .annTable tr{display:table-row}
   .annTable th,.annTable td{
-    display:table-cell;
-    padding:6px 8px;
-    font-size:13px;
-    white-space:nowrap;
+    display:table-cell;padding:6px 8px;font-size:13px;white-space:nowrap;
   }
   .box .table-wrap{overflow-x:auto}
 }
@@ -139,7 +123,6 @@ tr:nth-child(even) td{background:#f3f4f6}
     <label>廠商</label>
     <select id="vendorSel"></select>
     <button id="clearVendor" class="btn3">清除廠商</button>
-    <button id="vendorPage" class="btn4">廠商頁</button>
   </div>
 
   <div class="row">
@@ -211,58 +194,64 @@ tr:nth-child(even) td{background:#f3f4f6}
   </div>
 </div></div>
 
-<!-- 廠商頁 -->
-<div id="vModal" class="modal"><div class="box">
-  <div class="boxHead">
-    <div>
-      <h3 id="vTitle">廠商頁</h3>
-      <div class="boxSub">點廠商→看該廠商所有藥（廠商以「前兩個中文」歸類）</div>
-    </div>
-    <button id="vClose" class="btn3">關閉</button>
-  </div>
-  <div class="row">
-    <input id="vSearch" placeholder="搜尋廠商" style="flex:1;min-width:220px">
-    <button id="vClear" class="btn3">清除</button>
-  </div>
-  <div id="vList" class="row" style="gap:6px"></div>
-  <hr style="border:none;border-top:1px solid #e5e7eb;margin:10px 0">
-  <div class="row">
-    <input id="vdSearch" placeholder="搜尋藥代/藥品" style="flex:1;min-width:220px">
-    <button id="vdClear" class="btn3">清除</button>
-  </div>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th>藥代</th><th>藥品</th><th>用量</th><th>庫存</th></tr></thead>
-      <tbody id="vdBody"></tbody>
-    </table>
-  </div>
-</div></div>
-
 <script>
 (()=> {
   const $=id=>document.getElementById(id);
 
   const STOCK="drug_stock_v1",
         NOTE="drug_note_v1",
-        MAN="manual_announce_v1",
         IGN="ignore_auto_announce_v1",
         ADMIN="admin_on_v1",
         EXT="external_announce_v1";
 
+  // ✅ 公告同步：兩端共用 notices.json
+  const NOTICES_URL = "notices.json";
+  // 讓離線/檔案模式也能跑：本機快取一份
+  const NOTICE_CACHE = "notice_cache_v1";
+
   const stock=JSON.parse(localStorage.getItem(STOCK)||"{}");
   const notes=JSON.parse(localStorage.getItem(NOTE)||"{}");
-  const manual=JSON.parse(localStorage.getItem(MAN)||"{}");
   const ignore=JSON.parse(localStorage.getItem(IGN)||"{}");
-  const ext=JSON.parse(localStorage.getItem(EXT)||"[]");
+  const ext=JSON.parse(localStorage.getItem(EXT)||"[]"); // 仍保留：用來補「外部公告藥」到主清單
 
   let adminOn=localStorage.getItem(ADMIN)==="1";
   let rows=[], viewRows=[], vendorMap=new Map();
 
+  // ✅ notices: { [code]: {text, level, updatedAt} }
+  let notices = {};
+
   const pad2=n=>String(n).padStart(2,"0");
   const file=(y,m)=>`inventory_${y}_${pad2(m)}.json`;
 
-  // 外部公告判斷（簡單版：若你之前 code 會帶空白，再跟我說我幫你改成 normCode）
-  const isExt = (code)=> ext.some(x => x.code === code);
+  function normCode(s){ return String(s||"").trim().toUpperCase(); }
+
+  async function loadNotices(){
+    // 先讀快取（避免 fetch 失敗時整個沒有公告）
+    try{ notices = JSON.parse(localStorage.getItem(NOTICE_CACHE)||"{}") || {}; }catch{ notices = {}; }
+
+    try{
+      const r = await fetch(`${NOTICES_URL}?t=${Date.now()}`, {cache:"no-store"});
+      if(!r.ok) return;
+      const obj = await r.json();
+      if(obj && typeof obj === "object"){
+        notices = obj;
+        localStorage.setItem(NOTICE_CACHE, JSON.stringify(notices));
+      }
+    }catch{
+      // keep cache
+    }
+  }
+
+  // ✅ 有公告：notices.json 有文字
+  function hasNotice(code){
+    const k = normCode(code);
+    const x = notices[k];
+    return !!(x && String(x.text||"").trim());
+  }
+  function noticeText(code){
+    const k = normCode(code);
+    return String((notices[k]&&notices[k].text) || "").trim();
+  }
 
   const vendorKey = (s)=>{
     s=(s||"未標示廠商").trim();
@@ -303,8 +292,12 @@ tr:nth-child(even) td{background:#f3f4f6}
     $("addExt").style.display = adminOn ? "inline-block" : "none";
   }
 
+  // 外部公告判斷（ext 清單：用來把外部公告藥「補進主清單」）
+  const isExt = (code)=> ext.some(x => normCode(x.code) === normCode(code));
+
   async function loadData(){
     rows=[]; vendorMap=new Map();
+
     const y=+$("year").value;
     const adv=$("adv").checked;
     const a=+$("m1").value, b=adv?+$("m2").value:a;
@@ -318,7 +311,9 @@ tr:nth-child(even) td{background:#f3f4f6}
         if(!r.ok) continue;
         const list=await r.json();
         list.forEach(x=>{
-          const code=x["藥代"], name=x["藥品"], ven=x["廠商"]||"未標示廠商";
+          const code=normCode(x["藥代"]);
+          const name=x["藥品"];
+          const ven=x["廠商"]||"未標示廠商";
           if(!agg.has(code)) agg.set(code,{藥代:code,藥品:name,廠商:ven, sum:0});
           agg.get(code).sum += Number(x["月用量"]||0);
         });
@@ -334,19 +329,18 @@ tr:nth-child(even) td{background:#f3f4f6}
       return rec;
     });
 
-    // 合併外部公告（用量=0；公告明細會顯示 —）
+    // ✅ 把 ext 補進 rows（若 inventory 沒有）
     ext.forEach(x=>{
-      const code=(x.code||"").trim(), name=(x.name||"").trim();
+      const code=normCode(x.code), name=String(x.name||"").trim();
       if(!code || !name) return;
       if(rows.some(r=>r.藥代===code)) return;
+
       const ven=(x.vendor||"外部公告").trim();
       const vKey=vendorKey(ven);
       const rec={藥代:code,藥品:name,廠商:ven,廠商Key:vKey,用量:0,區間總用量:0,月數:monthCount};
       rows.push(rec);
       if(!vendorMap.has(vKey)) vendorMap.set(vKey,[]);
       vendorMap.get(vKey).push(rec);
-      manual[code]=1;
-      localStorage.setItem(MAN,JSON.stringify(manual));
     });
 
     buildVendorDropdown();
@@ -370,11 +364,18 @@ tr:nth-child(even) td{background:#f3f4f6}
     const st=stock[r.藥代];
     return u>0 && st!=null && st>u*6;
   }
-  function isAnn(r){ return !!manual[r.藥代] || isAutoAnn(r); }
+
+  // ✅ 公告判定：以 notices.json 為主（同步），再加「自動公告」
+  function isAnn(r){
+    if(hasNotice(r.藥代)) return true;
+    return isAutoAnn(r);
+  }
+
   function annReason(r){
-    const a=isAutoAnn(r), m=!!manual[r.藥代];
-    if(m && a) return "手動+自動";
-    if(m) return "手動";
+    const a=isAutoAnn(r);
+    const n=hasNotice(r.藥代);
+    if(n && a) return "公告(同步)+自動";
+    if(n) return "公告(同步)";
     if(a) return "自動";
     return "";
   }
@@ -384,7 +385,7 @@ tr:nth-child(even) td{background:#f3f4f6}
     const v=$("vendorSel").value;
     viewRows=rows.filter(r=>{
       if(v!=="(全部)" && r.廠商Key!==v) return false;
-      if(q && !(r.藥代.includes(q) || r.藥品.includes(q))) return false;
+      if(q && !(r.藥代.includes(q.toUpperCase()) || r.藥品.includes(q))) return false;
       return true;
     });
     renderTable(viewRows);
@@ -398,6 +399,8 @@ tr:nth-child(even) td{background:#f3f4f6}
       const u=Math.round((r.用量||0)*100)/100;
       const st=stock[r.藥代], ann=isAnn(r), extFlag=isExt(r.藥代);
       const tr=document.createElement("tr");
+      const nText = noticeText(r.藥代);
+
       tr.innerHTML=`
         <td>${r.藥代}</td>
         <td class="drugName">${r.藥品}</td>
@@ -407,9 +410,7 @@ tr:nth-child(even) td{background:#f3f4f6}
             <div class="stockTop">
               <input type="number" inputmode="numeric" value="${st??""}" style="min-width:120px">
               ${tagHTML(st,u,ann,extFlag)}
-              <label style="display:flex;align-items:center;gap:6px;margin-left:6px">
-                <input type="checkbox" ${manual[r.藥代]?"checked":""} style="transform:scale(1.05)">手動公告
-              </label>
+              ${nText ? `<span class="small">📝 ${escapeHtml(nText)}</span>` : ``}
             </div>
             <input class="note" placeholder="備註" value="${notes[r.藥代]??""}">
           </div>
@@ -417,13 +418,11 @@ tr:nth-child(even) td{background:#f3f4f6}
 
       const tagEl=tr.querySelector(".tag");
       const stockInp=tr.querySelector('input[type="number"]');
-      const manChk=tr.querySelector('input[type="checkbox"]');
       const noteInp=tr.querySelector('input.note');
 
       stockInp.oninput=()=>{ stockInp.value=stockInp.value.replace(/\D/g,""); const v=stockInp.value===""?null:+stockInp.value; updateTag(tagEl,v,u,isAnn(r),extFlag); };
       stockInp.onblur=()=>{ const v=stockInp.value===""?null:+stockInp.value; stock[r.藥代]=v; localStorage.setItem(STOCK,JSON.stringify(stock)); applyFilters(); };
 
-      manChk.onchange=()=>{ if(manChk.checked) manual[r.藥代]=1; else delete manual[r.藥代]; localStorage.setItem(MAN,JSON.stringify(manual)); applyFilters(); };
       noteInp.oninput=()=>{ notes[r.藥代]=noteInp.value; localStorage.setItem(NOTE,JSON.stringify(notes)); };
 
       tb.appendChild(tr);
@@ -465,15 +464,17 @@ tr:nth-child(even) td{background:#f3f4f6}
       const u = extFlag ? "—" : (Math.round((r.用量||0)*100)/100);
       const st=stock[r.藥代];
       const reason=annReason(r);
+
+      const nText = noticeText(r.藥代);
       const tr=document.createElement("tr");
       tr.innerHTML=`
         <td>${r.藥代}</td>
         <td class="drugName">${r.藥品}</td>
         <td>${u}</td>
         <td>${st??""}</td>
-        <td>${reason}</td>
+        <td>${reason}${nText ? `：${escapeHtml(nText)}` : ""}</td>
         <td>${adminOn?`
-          <button class="btn3" data-del="${r.藥代}" style="padding:6px 10px;border-radius:999px;border:1px solid #d1d5db;cursor:pointer">刪除公告</button>
+          <button class="btn3" data-del="${r.藥代}" style="padding:6px 10px;border-radius:999px;border:1px solid #d1d5db;cursor:pointer">忽略自動公告</button>
         `:`<span class="small">需管理者</span>`}</td>`;
       tb.appendChild(tr);
     });
@@ -481,18 +482,8 @@ tr:nth-child(even) td{background:#f3f4f6}
     tb.querySelectorAll("[data-del]").forEach(btn=>{
       btn.onclick=()=>{
         const code=btn.getAttribute("data-del");
-        const idx=ext.findIndex(x=>x.code===code);
-        if(idx>=0){
-          ext.splice(idx,1);
-          localStorage.setItem(EXT,JSON.stringify(ext));
-          delete ignore[code];
-          localStorage.setItem(IGN,JSON.stringify(ignore));
-        }else{
-          ignore[code]=1;
-          localStorage.setItem(IGN,JSON.stringify(ignore));
-        }
-        delete manual[code];
-        localStorage.setItem(MAN,JSON.stringify(manual));
+        ignore[code]=1;
+        localStorage.setItem(IGN,JSON.stringify(ignore));
         applyFilters();
         openAnnModal();
       };
@@ -537,7 +528,19 @@ tr:nth-child(even) td{background:#f3f4f6}
     const data=viewRows.map(r=>{
       const st=stock[r.藥代];
       const u=Math.round((r.用量||0)*100)/100;
-      return {藥代:r.藥代,藥品:r.藥品,廠商:r.廠商Key,原廠商:r.廠商,用量:u,庫存:st??"",公告:isAnn(r)?"是":"否",公告原因:annReason(r),備註:notes[r.藥代]??""};
+      const nText = noticeText(r.藥代);
+      return {
+        藥代:r.藥代,
+        藥品:r.藥品,
+        廠商:r.廠商Key,
+        原廠商:r.廠商,
+        用量:u,
+        庫存:st??"",
+        公告:isAnn(r)?"是":"否",
+        公告原因:annReason(r),
+        公告內容:nText,
+        備註:notes[r.藥代]??""
+      };
     });
     const ws=XLSX.utils.json_to_sheet(data);
     const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"data");
@@ -575,36 +578,6 @@ tr:nth-child(even) td{background:#f3f4f6}
     $("modal").style.display="flex";
   }
 
-  function openVendorPage(){
-    $("vModal").style.display="flex";
-    renderVendorList();
-    $("vdBody").innerHTML="";
-  }
-  function renderVendorList(){
-    const kw=$("vSearch").value.trim();
-    const list=[...vendorMap.keys()].sort((a,b)=>a.localeCompare(b,"zh-Hant")).filter(k=>!kw || k.includes(kw));
-    const box=$("vList"); box.innerHTML="";
-    list.forEach(k=>{
-      const b=document.createElement("button");
-      b.className="btn3"; b.style.border="1px solid #d1d5db";
-      b.textContent=`${k} (${vendorMap.get(k).length})`;
-      b.onclick=()=>renderVendorDrugs(k);
-      box.appendChild(b);
-    });
-  }
-  function renderVendorDrugs(k){
-    $("vTitle").textContent=`廠商頁：${k}`;
-    const kw=$("vdSearch").value.trim();
-    const list=(vendorMap.get(k)||[]).filter(r=>!kw || r.藥代.includes(kw) || r.藥品.includes(kw));
-    const tb=$("vdBody"); tb.innerHTML="";
-    list.forEach(r=>{
-      const u=Math.round((r.用量||0)*100)/100, st=stock[r.藥代];
-      const tr=document.createElement("tr");
-      tr.innerHTML=`<td>${r.藥代}</td><td class="drugName">${r.藥品}</td><td>${u}</td><td>${st??""}</td>`;
-      tb.appendChild(tr);
-    });
-  }
-
   function shiftMonth(d){
     let m=+$("m1").value; m+=d;
     if(m<1) m=1; if(m>12) m=12;
@@ -615,20 +588,32 @@ tr:nth-child(even) td{background:#f3f4f6}
 
   function addExternalAnnounce(){
     if(!adminOn) return alert("需管理者模式");
-    const code=(prompt("外部公告藥代（建議 EXT001 / EXT-xxx）","EXT001")||"").trim();
+    const code=normCode(prompt("外部公告藥代（建議 EXT001 / EXT-xxx）","EXT001")||"");
     if(!code) return;
-    if(ext.some(x=>x.code===code) || rows.some(r=>r.藥代===code)) return alert("此藥代已存在，請換一個");
+    if(ext.some(x=>normCode(x.code)===code) || rows.some(r=>r.藥代===code)) return alert("此藥代已存在，請換一個");
+
     const name=(prompt("藥品名稱（只填藥名）","")||"").trim();
     if(!name) return;
+
     const vendor=(prompt("廠商（可空）","外部公告")||"外部公告").trim();
     ext.push({code,name,vendor,createdAt:Date.now()});
     localStorage.setItem(EXT,JSON.stringify(ext));
-    manual[code]=1; localStorage.setItem(MAN,JSON.stringify(manual));
+
+    alert("已新增外部公告藥。提醒：公告內容請寫入 notices.json，手機/網頁才會同步顯示。");
     loadData();
   }
 
+  function escapeHtml(s){
+    return String(s||"")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#39;");
+  }
+
   // events
-  $("reload").onclick=loadData;
+  $("reload").onclick=async ()=>{ await loadNotices(); await loadData(); };
   $("search").onclick=applyFilters;
   $("q").addEventListener("keydown",e=>{ if(e.key==="Enter") applyFilters(); });
   $("vendorSel").onchange=applyFilters;
@@ -656,14 +641,6 @@ tr:nth-child(even) td{background:#f3f4f6}
   $("export").onclick=exportExcel;
   $("yearView").onclick=yearOverview;
 
-  $("vendorPage").onclick=openVendorPage;
-  $("vClose").onclick=()=>$("vModal").style.display="none";
-  $("vModal").onclick=(e)=>{ if(e.target.id==="vModal") $("vModal").style.display="none"; };
-  $("vSearch").oninput=renderVendorList;
-  $("vClear").onclick=()=>{ $("vSearch").value=""; renderVendorList(); };
-  $("vdSearch").oninput=()=>{ const t=$("vTitle").textContent.replace("廠商頁：",""); if(t) renderVendorDrugs(t); };
-  $("vdClear").onclick=()=>{ $("vdSearch").value=""; const t=$("vTitle").textContent.replace("廠商頁：",""); if(t) renderVendorDrugs(t); };
-
   $("admin").onclick=()=>{
     const ok=prompt("輸入管理者密碼（此裝置）","");
     if(ok==="admin"){
@@ -677,7 +654,7 @@ tr:nth-child(even) td{background:#f3f4f6}
 
   $("addExt").onclick=addExternalAnnounce;
 
-  // ✅ 重置：不刪公告（MAN/IGN/EXT 不動）
+  // ✅ 重置：不動公告來源（notices.json），只清庫存/備註
   $("reset").onclick=()=>{
     localStorage.removeItem(STOCK);
     localStorage.removeItem(NOTE);
@@ -686,7 +663,10 @@ tr:nth-child(even) td{background:#f3f4f6}
 
   // init
   initSelects();
-  loadData();
+  (async ()=>{
+    await loadNotices();
+    await loadData();
+  })();
 })();
 </script>
 </body>
