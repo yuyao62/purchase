@@ -38,10 +38,9 @@ tr:nth-child(even) td{background:#f3f4f6}
 .box .table-wrap{max-height:70vh;overflow:auto;border-radius:12px}
 .small{font-size:13px;color:#6b7280}
 
-/* ✅ 手機：主清單改清單模式＝一藥一行（表格），左右滑動 */
+/* ✅ 手機：主清單保持表格，左右滑動 */
 @media(max-width:520px){
   .app{margin:0;border-radius:0;box-shadow:none}
-
   .mainTable{display:table;width:100%;min-width:760px;border-collapse:collapse}
   .mainTable thead{display:table-header-group}
   .mainTable tbody{display:table-row-group}
@@ -54,16 +53,13 @@ tr:nth-child(even) td{background:#f3f4f6}
     white-space:nowrap;
   }
   .table-wrap{overflow-x:auto}
-  .mainTable td:nth-child(2){
-    white-space:normal;
-    min-width:220px;
-  }
+  .mainTable td:nth-child(2){white-space:normal;min-width:220px}
   .mainTable td:nth-child(4){min-width:320px}
   .mainTable .stockTop input{width:120px}
   .note{font-size:13px}
 }
 
-/* ✅ 手機版：公告明細/需採購清單＝一筆一行（非卡片），左右滑動 */
+/* ✅ 手機版：公告明細/需採購清單＝表格左右滑動 */
 @media (max-width:520px){
   .annTable{display:table;width:100%;min-width:760px;border-collapse:collapse}
   .annTable thead{display:table-header-group}
@@ -153,7 +149,7 @@ tr:nth-child(even) td{background:#f3f4f6}
           <th style="width:72px">序號</th>
           <th>藥品（可改名）</th>
           <th style="width:130px">庫存（可輸入）</th>
-          <th>備註</th>
+          <th>備註（可輸入）</th>
           <th style="width:150px">操作</th>
         </tr>
       </thead>
@@ -224,17 +220,17 @@ tr:nth-child(even) td{background:#f3f4f6}
         NOTE="drug_note_v1",
         NAME="drug_name_override_v1",
         MAN="manual_announce_v1",
-        IGN="ignore_auto_announce_v1", // 保留：未使用也不影響
+        IGN="ignore_auto_announce_v1", // 保留
         ADMIN="admin_on_v1",
         EXT="external_announce_v1";
 
   // persisted state
-  const stock  = JSON.parse(localStorage.getItem(STOCK)||"{}");
-  const notes  = JSON.parse(localStorage.getItem(NOTE)||"{}");
-  const nameMap= JSON.parse(localStorage.getItem(NAME)||"{}");
-  const manual = JSON.parse(localStorage.getItem(MAN)||"{}");
-  const ignore = JSON.parse(localStorage.getItem(IGN)||"{}");
-  const ext    = JSON.parse(localStorage.getItem(EXT)||"[]");
+  const stock   = JSON.parse(localStorage.getItem(STOCK)||"{}");
+  const notes   = JSON.parse(localStorage.getItem(NOTE)||"{}");
+  const nameMap = JSON.parse(localStorage.getItem(NAME)||"{}");
+  const manual  = JSON.parse(localStorage.getItem(MAN)||"{}");
+  const ignore  = JSON.parse(localStorage.getItem(IGN)||"{}");
+  const ext     = JSON.parse(localStorage.getItem(EXT)||"[]");
 
   let adminOn = localStorage.getItem(ADMIN)==="1";
   let rows = [], viewRows = [], vendorMap = new Map();
@@ -325,9 +321,7 @@ tr:nth-child(even) td{background:#f3f4f6}
           if(!agg.has(code)) agg.set(code,{藥代:code,藥品:name,廠商:ven, sum:0});
           agg.get(code).sum += Number(x["月用量"]||0);
         });
-      }catch(e){
-        // 缺檔就略過
-      }
+      }catch(e){}
     }
 
     rows=[...agg.values()].map(x=>{
@@ -474,7 +468,6 @@ tr:nth-child(even) td{background:#f3f4f6}
     list.forEach(r=>{
       const st=stock[r.藥代];
       const u=Number(r.用量||0);
-
       if(isAnn(r)) ann++;
       if(st!=null && u>st) buy++;
       else if(st!=null) ok++;
@@ -496,18 +489,15 @@ tr:nth-child(even) td{background:#f3f4f6}
   function deleteAnnounceByCode(code){
     const ncode = normCode(code);
 
-    // 手動公告刪除
     delete manual[code];
     delete manual[ncode];
     localStorage.setItem(MAN, JSON.stringify(manual));
 
-    // 外部公告刪除（如果存在）
     const idx = ext.findIndex(x => normCode(x.code) === ncode);
     if(idx >= 0){
       ext.splice(idx,1);
       localStorage.setItem(EXT, JSON.stringify(ext));
 
-      // 連帶清理（只針對外部公告這種「完全靠你手動維護」的資料）
       delete nameMap[code]; delete nameMap[ncode];
       localStorage.setItem(NAME, JSON.stringify(nameMap));
 
@@ -521,7 +511,7 @@ tr:nth-child(even) td{background:#f3f4f6}
     applyFilters();
   }
 
-  // ✅ 公告明細：序號 1/2/3…，藥品/庫存即刻可輸入，且可刪
+  // ✅ 公告明細（含：改名/庫存/備註/刪除）
   function openAnnModal(){
     $("annRule").textContent = "公告清單（手動公告 + 外部公告；不受月份切換影響）";
 
@@ -545,7 +535,10 @@ tr:nth-child(even) td{background:#f3f4f6}
           <input data-stock="${code}" type="number" inputmode="numeric" value="${st ?? ""}"
                  style="width:100%;border-radius:10px;border:1px solid #d1d5db;padding:6px 10px">
         </td>
-        <td>${note}</td>
+        <td>
+          <input data-note="${code}" value="${String(note).replace(/"/g,'&quot;')}"
+                 style="width:100%;border-radius:10px;border:1px solid #d1d5db;padding:6px 10px">
+        </td>
         <td>
           <button class="btn2" data-del="${code}" style="padding:8px 14px;border-radius:999px;cursor:pointer">
             🗑 刪除公告
@@ -575,6 +568,15 @@ tr:nth-child(even) td{background:#f3f4f6}
       });
     });
 
+    tb.querySelectorAll("input[data-note]").forEach(inp=>{
+      inp.addEventListener("input", ()=>{
+        const code=inp.getAttribute("data-note");
+        notes[code]=inp.value;
+        localStorage.setItem(NOTE, JSON.stringify(notes));
+        applyFilters();
+      });
+    });
+
     tb.querySelectorAll("[data-del]").forEach(btn=>{
       btn.onclick=()=>{
         const code=btn.getAttribute("data-del");
@@ -588,9 +590,7 @@ tr:nth-child(even) td{background:#f3f4f6}
     $("modal").style.display="flex";
   }
 
-  function closeModal(id){
-    $(id).style.display="none";
-  }
+  function closeModal(id){ $(id).style.display="none"; }
 
   // ✅ 需採購清單
   function openBuyModal(){
@@ -600,14 +600,11 @@ tr:nth-child(even) td{background:#f3f4f6}
       .map(r=>{
         const u = Number(r.用量||0);
         const st = stock[r.藥代];
-        const extFlag = isExt(r.藥代);
-        const annFlag = isAnn(r);
         const showName = nameMap[r.藥代] ?? r.藥品;
-        return {r,u,st,extFlag,annFlag,showName};
+        return {r,u,st,showName};
       })
-      .filter(x => x.st!=null && x.u>0 && Number(x.st) < x.u); // 庫存 < 用量
+      .filter(x => x.st!=null && x.u>0 && Number(x.st) < x.u);
 
-    // 排序：缺口大→小
     list.sort((a,b)=> (b.u-Number(b.st)) - (a.u-Number(a.st)));
 
     list.forEach(x=>{
@@ -615,7 +612,7 @@ tr:nth-child(even) td{background:#f3f4f6}
       const u=Math.round(x.u*100)/100;
       const st=Number(x.st);
       const gap = Math.max(0, x.u - st);
-      const suggest = Math.ceil(gap); // 建議採購：向上取整
+      const suggest = Math.ceil(gap);
       const note = notes[code] ?? "";
 
       const tr=document.createElement("tr");
@@ -696,7 +693,7 @@ tr:nth-child(even) td{background:#f3f4f6}
     renderVendorList();
   }
 
-  // ✅ 匯出 Excel：目前篩選結果 viewRows
+  // ✅ 匯出 Excel（篩選結果）
   function exportExcel(){
     const data = viewRows.map(r=>{
       const code = r.藥代;
@@ -727,11 +724,9 @@ tr:nth-child(even) td{background:#f3f4f6}
     XLSX.writeFile(wb, `藥品採購_${y}_${pad2(m1)}-${pad2(m2)}.xlsx`);
   }
 
-  // ✅ 年度總覽（直接匯出 Excel：12 個月合計/平均）
+  // ✅ 年度總覽（匯出 Excel）
   async function exportYearOverview(){
     const y=+$("year").value;
-
-    // code -> {name,vendor, m1..m12}
     const map = new Map();
 
     for(let m=1;m<=12;m++){
@@ -761,7 +756,7 @@ tr:nth-child(even) td{background:#f3f4f6}
       map.set(code,{藥代:code, 藥品:name, 廠商:(x.vendor||"外部公告"), months:Array(12).fill(0)});
     });
 
-    const rows = [...map.values()].map(o=>{
+    const outRows = [...map.values()].map(o=>{
       const nm = nameMap[o.藥代] ?? o.藥品;
       const total = o.months.reduce((a,b)=>a+b,0);
       const avg = total/12;
@@ -776,9 +771,9 @@ tr:nth-child(even) td{background:#f3f4f6}
       return out;
     });
 
-    rows.sort((a,b)=> String(a.藥代||"").localeCompare(String(b.藥代||""),"en",{numeric:true,sensitivity:"base"}));
+    outRows.sort((a,b)=> String(a.藥代||"").localeCompare(String(b.藥代||""),"en",{numeric:true,sensitivity:"base"}));
 
-    const ws = XLSX.utils.json_to_sheet(rows);
+    const ws = XLSX.utils.json_to_sheet(outRows);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "年度總覽");
     XLSX.writeFile(wb, `年度總覽_${y}.xlsx`);
@@ -792,15 +787,18 @@ tr:nth-child(even) td{background:#f3f4f6}
     $("addExt").style.display = adminOn ? "inline-block" : "none";
   }
 
-  // ✅ 新增外部公告（存在 localStorage）
-  function addExternalAnnounce(){
+  // ✅ 新增外部公告後：直接打開公告明細
+  async function addExternalAnnounce(){
+    // 保險：先關公告視窗（避免疊層）
+    $("modal").style.display="none";
+
     if(!adminOn) return;
 
     const code = prompt("外部公告：請輸入藥代（例如 A00523）");
-    if(!code) return;
+    if(!code){ openAnnModal(); return; }
 
     const name = prompt("外部公告：請輸入藥品名稱");
-    if(!name) return;
+    if(!name){ openAnnModal(); return; }
 
     const vendor = prompt("外部公告：廠商（可空白）") || "外部公告";
     const ncode = normCode(code);
@@ -808,14 +806,18 @@ tr:nth-child(even) td{background:#f3f4f6}
     const exists = ext.some(x=> normCode(x.code)===ncode);
     if(exists){
       alert("這個藥代已存在外部公告。");
+      openAnnModal();
       return;
     }
 
     ext.push({code:code.trim(), name:name.trim(), vendor:vendor.trim()});
     localStorage.setItem(EXT, JSON.stringify(ext));
 
-    // 外部公告通常也希望「看起來像公告」：不用動 manual，isAnn 已包含 isExt
-    loadData();
+    // ✅ 等資料重載完，公告明細才會包含新的一筆
+    await loadData();
+
+    // ✅ 新增完直接跳公告明細
+    openAnnModal();
   }
 
   // ✅ reset（只重置查詢條件，不清資料）
@@ -828,7 +830,7 @@ tr:nth-child(even) td{background:#f3f4f6}
     applyFilters();
   }
 
-  // ✅ 月份切換按鈕
+  // ✅ 月份切換
   function shiftMonth(delta){
     let m = +$("m1").value + delta;
     if(m<1) m=12;
@@ -874,10 +876,21 @@ tr:nth-child(even) td{background:#f3f4f6}
     $("yearView").onclick=exportYearOverview;
     $("buyView").onclick=openBuyModal;
 
-    $("admin").onclick=toggleAdmin;
-    $("addExt").onclick=addExternalAnnounce;
+    // ✅ 防冒泡：避免點按鈕被 announceBar 吃掉
+    $("admin").onclick = (e)=>{
+      e.preventDefault(); e.stopPropagation();
+      toggleAdmin();
+    };
 
-    $("announceBar").onclick=openAnnModal;
+    $("addExt").onclick = async (e)=>{
+      e.preventDefault(); e.stopPropagation();
+      await addExternalAnnounce();
+    };
+
+    $("announceBar").onclick = (e)=>{
+      e.preventDefault(); e.stopPropagation();
+      openAnnModal();
+    };
 
     // modals close
     $("close").onclick=()=>closeModal("modal");
@@ -890,7 +903,7 @@ tr:nth-child(even) td{background:#f3f4f6}
     $("vModal").addEventListener("click",(e)=>{ if(e.target.id==="vModal") closeModal("vModal"); });
 
     // vendor modal internal
-    $("vendorPage").onclick=openVendorModal;
+    $("vendorPage").onclick=(e)=>{ e.preventDefault(); e.stopPropagation(); openVendorModal(); };
     $("vSearch").addEventListener("input", renderVendorList);
     $("vClear").onclick=()=>{ $("vSearch").value=""; renderVendorList(); };
 
