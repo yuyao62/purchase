@@ -551,29 +551,32 @@ tr:nth-child(even) td{background:#f3f4f6}
     const closeBtn    = document.getElementById("annAddClose");
 
     const refreshPreview = ()=>{
-      const raw = (addCodeInp.value||"").trim();
-      if(!raw){
-        addInfo.textContent = "—";
-        addStockInp.value = "";
-        addNoteInp.value = "";
-        return;
-      }
+  const raw = (addCodeInp.value||"").trim();
+  if(!raw){
+    addInfo.textContent = "—";
+    addStockInp.value = "";
+    addNoteInp.value = "";
+    return;
+  }
 
-      const r = findRowByCode(raw);
-      const codeShow = normCode(raw);
+  const codeShow = normCode(raw);
 
-      if(r){
-        const fullName = (nameMap[r.藥代] ?? r.藥品) || "";
-        addInfo.textContent = `${codeShow} / ${trunc10(fullName)}`;
+  // ✅ 先顯示藥代（不管有沒有找到藥品）
+  addInfo.textContent = codeShow;
 
-        const st = stock[r.藥代];
-        const nt = notes[r.藥代] ?? "";
-        addStockInp.value = (st==null ? "" : String(st));
-        addNoteInp.value = nt;
-      }else{
-        addInfo.textContent = `${codeShow} / （找不到藥品）`;
-      }
-    };
+  const r = findRowByCode(raw);
+  if(r){
+    const fullName = (nameMap[r.藥代] ?? r.藥品) || "";
+    // ✅ 找到藥品就補上「/ 藥名(10碼)」
+    addInfo.textContent = `${codeShow} / ${String(fullName).slice(0,10)}`;
+
+    // 帶入既有庫存/備註
+    const st = stock[r.藥代];
+    const nt = notes[r.藥代] ?? "";
+    addStockInp.value = (st==null ? "" : String(st));
+    addNoteInp.value = nt;
+  }
+};
 
     addCodeInp.addEventListener("input", refreshPreview);
 
