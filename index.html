@@ -51,28 +51,73 @@ tr:nth-child(even) td{background:#f3f4f6}
 .box .table-wrap{max-height:70vh;overflow:auto;border-radius:12px}
 .small{font-size:13px;color:#6b7280}
 
-/* ✅ 手機：主清單表格左右滑動 */
+/* ============================
+   ✅ 手機：主清單「一品項一行」
+   不左右滑、同一張 table 直向化
+   ============================ */
 @media(max-width:520px){
   .app{margin:0;border-radius:0;box-shadow:none}
-  .mainTable{display:table;width:100%;min-width:760px;border-collapse:collapse}
-  .mainTable thead{display:table-header-group}
-  .mainTable tbody{display:table-row-group}
-  .mainTable tr{display:table-row}
-  .mainTable th,.mainTable td{
-    display:table-cell;
-    padding:6px 8px;
-    font-size:13px;
-    vertical-align:top;
-    white-space:nowrap;
+
+  /* 取消主清單橫向捲（避免左右滑） */
+  .table-wrap{overflow-x:visible}
+
+  /* table 轉成直向列表 */
+  .mainTable,
+  .mainTable thead,
+  .mainTable tbody,
+  .mainTable tr,
+  .mainTable th,
+  .mainTable td{
+    display:block;
+    width:100%;
   }
-  .table-wrap{overflow-x:auto}
-  .mainTable td:nth-child(2){white-space:normal;min-width:220px}
-  .mainTable td:nth-child(4){min-width:320px}
-  .mainTable .stockTop input{width:120px}
-  .note{font-size:13px}
+
+  /* 手機不顯示表頭 */
+  .mainTable thead{display:none}
+
+  /* 每個品項一行（容器） */
+  .mainTable tr{
+    background:#fff;
+    border-radius:14px;
+    padding:12px;
+    margin:10px 0;
+    box-shadow:0 6px 14px rgba(0,0,0,.06);
+  }
+
+  /* 每格改成「標籤 + 內容」 */
+  .mainTable td{
+    padding:0;
+    margin:0 0 10px;
+    white-space:normal;
+    word-break:break-word;
+  }
+  .mainTable td:last-child{margin-bottom:0}
+
+  .mainTable td::before{
+    display:block;
+    font-weight:900;
+    color:#6b7280;
+    font-size:12px;
+    margin-bottom:4px;
+  }
+
+  .mainTable td:nth-child(1)::before{content:"藥代";}
+  .mainTable td:nth-child(2)::before{content:"藥品";}
+  .mainTable td:nth-child(3)::before{content:"用量";}
+  .mainTable td:nth-child(4)::before{content:"庫存 / 公告";}
+
+  /* 手機上控制項排版更順 */
+  .mainTable .stockTop{
+    gap:8px;
+  }
+  .mainTable .stockTop input[type="number"]{
+    width:140px;
+    max-width:100%;
+  }
+  .note{font-size:14px}
 }
 
-/* ✅ 手機版：公告明細/需採購清單表格左右滑動 */
+/* ✅ 手機版：公告明細/需採購清單表格左右滑動（先保留） */
 @media (max-width:520px){
   .annTable{display:table;width:100%;min-width:760px;border-collapse:collapse}
   .annTable thead{display:table-header-group}
@@ -551,32 +596,32 @@ tr:nth-child(even) td{background:#f3f4f6}
     const closeBtn    = document.getElementById("annAddClose");
 
     const refreshPreview = ()=>{
-  const raw = (addCodeInp.value||"").trim();
-  if(!raw){
-    addInfo.textContent = "—";
-    addStockInp.value = "";
-    addNoteInp.value = "";
-    return;
-  }
+      const raw = (addCodeInp.value||"").trim();
+      if(!raw){
+        addInfo.textContent = "—";
+        addStockInp.value = "";
+        addNoteInp.value = "";
+        return;
+      }
 
-  const codeShow = normCode(raw);
+      const codeShow = normCode(raw);
 
-  // ✅ 先顯示藥代（不管有沒有找到藥品）
-  addInfo.textContent = codeShow;
+      // ✅ 先顯示藥代（不管有沒有找到藥品）
+      addInfo.textContent = codeShow;
 
-  const r = findRowByCode(raw);
-  if(r){
-    const fullName = (nameMap[r.藥代] ?? r.藥品) || "";
-    // ✅ 找到藥品就補上「/ 藥名(10碼)」
-    addInfo.textContent = `${codeShow} / ${String(fullName).slice(0,10)}`;
+      const r = findRowByCode(raw);
+      if(r){
+        const fullName = (nameMap[r.藥代] ?? r.藥品) || "";
+        // ✅ 找到藥品就補上「/ 藥名(10碼)」
+        addInfo.textContent = `${codeShow} / ${String(fullName).slice(0,10)}`;
 
-    // 帶入既有庫存/備註
-    const st = stock[r.藥代];
-    const nt = notes[r.藥代] ?? "";
-    addStockInp.value = (st==null ? "" : String(st));
-    addNoteInp.value = nt;
-  }
-};
+        // 帶入既有庫存/備註
+        const st = stock[r.藥代];
+        const nt = notes[r.藥代] ?? "";
+        addStockInp.value = (st==null ? "" : String(st));
+        addNoteInp.value = nt;
+      }
+    };
 
     addCodeInp.addEventListener("input", refreshPreview);
 
