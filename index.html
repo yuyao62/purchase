@@ -146,9 +146,15 @@ tr:nth-child(even) td{background:#f3f4f6}
 }
 .small{font-size:13px;color:#6b7280}
 
-/* =========================
-   手機：移除序號欄，藥代貼齊左邊
-   ========================= */
+/* ① 手機：隱藏公告表頭（一定要最前面之一） */
+@media (max-width:520px){
+  .annTable thead,
+  .annTable th{
+    display:none !important;
+  }
+}
+
+/* ② 手機：移除序號欄，藥代貼齊左邊 */
 @media (max-width:520px){
 
   /* grid 改成：藥代｜庫存｜備註｜刪除 */
@@ -156,37 +162,45 @@ tr:nth-child(even) td{background:#f3f4f6}
     grid-template-columns: 1fr 56px 56px 34px !important;
   }
 
-  /* 隱藏序號欄（第 1 欄） */
+  /* 隱藏序號欄 */
   .annTable td:nth-child(1){
     display:none !important;
   }
 
-  /* 藥代欄完全貼齊 */
+  /* 藥代欄貼左 */
   .annTable td:nth-child(2),
   .annTable td:nth-child(2) input{
     margin-left:0 !important;
     padding-left:6px !important;
   }
 }
-/* =========================
-   手機：行距再壓縮（最終緊密版）
-   ========================= */
+
+/* ③ 手機：行距再壓縮（最後一段，專管高度） */
 @media (max-width:520px){
 
-  /* 每一行本體再縮 */
   .annTable tr{
-    padding:2px 6px !important;   /* 原本 4~6px → 2px */
+    padding:2px 6px !important;
     gap:4px !important;
+  }
 
-/* =========================
-   手機：徹底隱藏公告表頭（避免直排）
-   ========================= */
-@media (max-width:520px){
-  .annTable thead,
-  .annTable th{
-    display:none !important;
+  .annTable td{
+    padding:0 !important;
+    margin:0 !important;
+  }
+
+  .annTable input{
+    height:20px !important;
+    min-height:20px !important;
+    padding:2px 4px !important;
+    line-height:1 !important;
+  }
+
+  .annTable td:nth-child(5) button{
+    height:20px !important;
+    min-height:20px !important;
   }
 }
+
 </style>
 
 </head>
