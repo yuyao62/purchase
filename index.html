@@ -146,107 +146,24 @@ tr:nth-child(even) td{background:#f3f4f6}
 }
 .small{font-size:13px;color:#6b7280}
 
-/* =================================================
-   手機：公告明細「密集列表」一眼 10 行（不左右滑）
-   ================================================= */
+/* =====================================
+   手機：內容固定一行，但可看完整（橫向滑）
+   ===================================== */
 @media (max-width:520px){
 
-  /* 不用卡片模式 */
-  .annTable,
-  .annTable thead,
-  .annTable tbody,
-  .annTable tr,
-  .annTable th,
-  .annTable td{
-    display: revert !important;
-  }
-
-  /* 表頭可留可不留；想更密集就隱藏 */
-  .annTable thead{ display:none !important; }
-
-  /* 每筆變成一行 grid：序號｜內容｜庫存｜刪除 */
-  .annTable tr{
-    display:grid !important;
-    grid-template-columns: 34px 1fr 74px 44px;
-    gap:6px;
-    align-items:center;
-    padding:6px 8px;
-    margin:0;
-    background:transparent;
-    border-radius:0;
-    box-shadow:none;
-    border-bottom:1px solid #e5e7eb;
-  }
-
-  .annTable td{
-    padding:0 !important;
-    margin:0 !important;
-    border:none !important;
-  }
-
-  /* 關掉你之前的 ::before 標籤（不然會變高） */
-  .annTable td::before{
-    display:none !important;
-    content:none !important;
-  }
-
-  /* 備註欄先隱藏，才有辦法 10 行 */
-  .annTable td:nth-child(4){
-    display:none !important;
-  }
-
-  /* 內容（第2欄）：一行顯示，太長省略 */
-  .annTable td:nth-child(2){
-    overflow:hidden;
-  }
+  /* 內容欄（藥代 / 公告） */
   .annTable td:nth-child(2),
   .annTable td:nth-child(2) input{
-    font-size:13px;
-    font-weight:800;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
+    white-space: nowrap;      /* 固定一行 */
+    overflow-x: auto;         /* 允許橫向滑 */
+    overflow-y: hidden;
+    text-overflow: clip;      /* 不顯示 ... */
+    -webkit-overflow-scrolling: touch;
   }
 
-  /* 庫存（第3欄）縮小 */
-  .annTable td:nth-child(3),
-  .annTable td:nth-child(3) input{
-    font-size:13px;
-    font-weight:800;
-    text-align:right;
-  }
-
-  /* input 縮高，整行才會密集 */
-  .annTable input{
-    height:28px;
-    min-height:28px;
-    padding:3px 6px;
-    border-radius:8px;
-    font-size:13px;
-    -webkit-text-size-adjust:100%;
-  }
-
-  /* 刪除按鈕變小圖示，不要滿版 */
-  .annTable td:nth-child(5){
-    justify-self:end;
-  }
-  .annTable td:nth-child(5) button{
-    width:40px !important;
-    height:28px;
-    padding:0 !important;
-    border-radius:10px;
-    font-size:0 !important;   /* 隱藏文字 */
-    line-height:0;
-  }
-  .annTable td:nth-child(5) button::before{
-    content:"🗑";
-    font-size:16px;
-    line-height:28px;
-  }
-
-  /* 防止左右滑 */
-  .box .table-wrap{
-    overflow-x:hidden !important;
+  /* 隱藏 scrollbar（但仍可滑） */
+  .annTable td:nth-child(2)::-webkit-scrollbar{
+    display:none;
   }
 }
 
