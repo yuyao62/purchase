@@ -192,72 +192,49 @@ tr:nth-child(even) td{background:#f3f4f6}
   .mainTable td:nth-child(4)::before{content:"庫存 / 公告"}
 }
 
-/* =========================
-   手機版：公告 Modal 優化
-   ========================= */
-@media (max-width: 520px) {
-  .modal { padding: 8px; }
+/* ===== 手機：公告卡片更緊湊（字更小、間距更小） ===== */
+@media (max-width:520px){
 
-  .box{
-    width:100%;
-    max-height:92vh;
-    padding:10px;
-    border-radius:14px;
-  }
+  /* 整體字體縮小 */
+  .boxHead h3{font-size:16px}
+  .boxSub{font-size:12px}
+  .small{font-size:12px}
 
-  .annTable,
-  .annTable thead,
-  .annTable tbody,
-  .annTable tr,
-  .annTable th,
-  .annTable td{
-    display:block;
-    width:100%;
-  }
-
-  .annTable thead{ display:none; }
-
+  /* 卡片間距縮小，讓一頁塞更多 */
   .annTable tr{
-    background:#fff;
-    border-radius:12px;
-    padding:10px;
-    margin-bottom:12px;
-    box-shadow:0 4px 12px rgba(0,0,0,.08);
+    padding:8px;
+    margin-bottom:8px;
   }
 
   .annTable td{
-    padding:6px 0;
-    border:none;
+    padding:4px 0;
   }
 
   .annTable td::before{
-    display:block;
+    font-size:11px;
+    margin-bottom:2px;
+  }
+
+  /* 讓 input / button 更小但仍好按 */
+  .annTable input{
     font-size:12px;
-    font-weight:900;
-    color:#6b7280;
-    margin-bottom:4px;
+    padding:6px 8px;
+    border-radius:10px;
   }
-
-  .annTable td:nth-child(1)::before{content:"序號";}
-  .annTable td:nth-child(2)::before{content:"內容";}
-  .annTable td:nth-child(3)::before{content:"庫存";}
-  .annTable td:nth-child(4)::before{content:"備註";}
-  .annTable td:nth-child(5)::before{content:"操作";}
-
-  .annTable input,
   .annTable button{
-    width:100%;
+    font-size:12px;
+    padding:6px 10px;
+    border-radius:10px;
   }
 
-  #textAnnAddBtn,
-  #textAnnClose,
-  #annAddBtn{
-    width:100%;
-    margin-top:6px;
+  /* Modal 內可捲動（上下捲），避免整頁擠爆 */
+  .box .table-wrap{
+    max-height:70vh;
+    overflow-y:auto;
+    overflow-x:hidden;
   }
-
-  .box .table-wrap{ overflow-x:hidden; }
 }
+
 </style>
 
 </head>
