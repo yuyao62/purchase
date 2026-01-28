@@ -1291,7 +1291,7 @@ tr:nth-child(even) td{background:#f3f4f6}
     applyFilters();
   }
 
-  // ✅ 依 index 進行上一月/下一月切換
+ // ✅ 依 index 進行「上一月/下一月」切換（跨年也可）
   function shiftMonth(delta){
     const y=+$("year").value;
     const m=+$("m1").value;
@@ -1385,7 +1385,30 @@ tr:nth-child(even) td{background:#f3f4f6}
       openAnnModal();
     };
 
-    $("annExport").onclick = (e)=>{
-      e.preventDefault(); e.stopPropagation();
-      exportAnnounceCSV
+    $("close").onclick=()=>closeModal("modal");
+    $("buyClose").onclick=()=>closeModal("buyModal");
+    $("vClose").onclick=()=>closeModal("vModal");
 
+    $("modal").addEventListener("click",(e)=>{ if(e.target.id==="modal") closeModal("modal"); });
+    $("buyModal").addEventListener("click",(e)=>{ if(e.target.id==="buyModal") closeModal("buyModal"); });
+    $("vModal").addEventListener("click",(e)=>{ if(e.target.id==="vModal") closeModal("vModal"); });
+
+    $("vendorPage").onclick=(e)=>{ e.preventDefault(); e.stopPropagation(); openVendorModal(); };
+    $("vSearch").addEventListener("input", renderVendorList);
+    $("vClear").onclick=()=>{ $("vSearch").value=""; renderVendorList(); };
+
+    $("vdSearch").addEventListener("input", renderVendorDrugs);
+    $("vdClear").onclick=()=>{ $("vdSearch").value=""; renderVendorDrugs(); };
+  }
+
+  // ✅ 啟動：先讀 index → 再初始化 → 再載入資料
+  (async ()=>{
+    await loadIndex();
+    initSelects();
+    bindEvents();
+    loadData();
+  })();
+})();
+</script>
+</body>
+</html>
