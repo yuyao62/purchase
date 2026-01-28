@@ -146,37 +146,21 @@ tr:nth-child(even) td{background:#f3f4f6}
 }
 .small{font-size:13px;color:#6b7280}
 
-/* =================================================
-   手機版：公告明細（穩定最終版）
-   ================================================= */
+/* =========================
+   手機：強制一藥一行（一藥一卡）
+   ========================= */
 @media (max-width:520px){
 
-  /* Modal */
-  .modal{ padding:8px; }
-  .box{
-    width:100%;
-    max-height:92vh;
-    padding:10px;
-    border-radius:14px;
-  }
-
-  /* 表格 → 卡片 */
-  .annTable,
-  .annTable thead,
-  .annTable tbody,
-  .annTable tr,
-  .annTable th,
-  .annTable td{
-    display:block;
-    width:100%;
-  }
-
-  .annTable thead,
-  .annTable th{
-    display:none !important;
-  }
-
+  /* 取消 tr 當卡片 */
   .annTable tr{
+    padding:0;
+    margin:0;
+    background:none;
+    box-shadow:none;
+  }
+
+  /* 每一組藥代資料（td 組合）當一張卡 */
+  .annTable td{
     background:#fff;
     border-radius:12px;
     padding:10px;
@@ -184,65 +168,12 @@ tr:nth-child(even) td{background:#f3f4f6}
     box-shadow:0 4px 12px rgba(0,0,0,.08);
   }
 
-  .annTable td{
-    margin-bottom:6px;
-    padding:0;
-    font-size:13px;
-    color:#111827;
-    white-space:normal;
-    word-break:break-word;
-  }
-  .annTable td:last-child{ margin-bottom:0; }
-
-  /* 欄位標籤 */
-  .annTable td::before{
-    display:block;
-    font-size:11px;
-    font-weight:900;
-    color:#6b7280;
-    margin-bottom:2px;
-  }
-  .annTable td:nth-child(1)::before{content:"序號";}
-  .annTable td:nth-child(2)::before{content:"內容";}
-  .annTable td:nth-child(3)::before{content:"庫存";}
-  .annTable td:nth-child(4)::before{content:"備註";}
-  .annTable td:nth-child(5)::before{content:"操作";}
-
-  /* 內容（藥代 / 公告文字） */
-  .annTable td:nth-child(2),
-  .annTable td:nth-child(2) input{
-    font-size:14px;
-    font-weight:900;
-  }
-
-  /* iOS input 修正 */
-  .annTable input{
-    width:100%;
-    font-size:13px;
-    padding:6px 8px;
-    border-radius:10px;
-    height:auto;
-    min-height:34px;
-    overflow:visible;
-    -webkit-text-size-adjust:100%;
-  }
-
-  /* 操作按鈕：小顆同一排 */
+  /* 操作按鈕那格不要自己變一張 */
   .annTable td:nth-child(5){
-    display:flex;
-    gap:6px;
-  }
-  .annTable td:nth-child(5) button{
-    width:auto;
-    padding:6px 10px;
-    font-size:12px;
-    border-radius:999px;
-    white-space:nowrap;
-  }
-
-  /* 防止左右滑 */
-  .box .table-wrap{
-    overflow-x:hidden;
+    box-shadow:none;
+    background:none;
+    padding:0;
+    margin-top:-6px;
   }
 }
 
