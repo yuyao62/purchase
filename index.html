@@ -192,14 +192,12 @@ tr:nth-child(even) td{background:#f3f4f6}
   .mainTable td:nth-child(4)::before{content:"庫存 / 公告"}
 }
 
-/* ===== 修正：手機公告卡片「藥代內容消失」 ===== */
 @media (max-width:520px){
-
-  /* 強制讓藥代內容顯示 */
   .annTable td:nth-child(1){
-    font-weight:900;
-    color:#111827;
+    display:block;
   }
+}
+
 
   /* 避免內容被 ::before 擠掉 */
   .annTable td:nth-child(1)::after{
