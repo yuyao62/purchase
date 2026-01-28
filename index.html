@@ -191,7 +191,75 @@ tr:nth-child(even) td{background:#f3f4f6}
   .mainTable td:nth-child(3)::before{content:"用量"}
   .mainTable td:nth-child(4)::before{content:"庫存 / 公告"}
 }
+
+/* =========================
+   手機版：公告 Modal 優化
+   ========================= */
+@media (max-width: 520px) {
+  .modal { padding: 8px; }
+
+  .box{
+    width:100%;
+    max-height:92vh;
+    padding:10px;
+    border-radius:14px;
+  }
+
+  .annTable,
+  .annTable thead,
+  .annTable tbody,
+  .annTable tr,
+  .annTable th,
+  .annTable td{
+    display:block;
+    width:100%;
+  }
+
+  .annTable thead{ display:none; }
+
+  .annTable tr{
+    background:#fff;
+    border-radius:12px;
+    padding:10px;
+    margin-bottom:12px;
+    box-shadow:0 4px 12px rgba(0,0,0,.08);
+  }
+
+  .annTable td{
+    padding:6px 0;
+    border:none;
+  }
+
+  .annTable td::before{
+    display:block;
+    font-size:12px;
+    font-weight:900;
+    color:#6b7280;
+    margin-bottom:4px;
+  }
+
+  .annTable td:nth-child(1)::before{content:"序號";}
+  .annTable td:nth-child(2)::before{content:"內容";}
+  .annTable td:nth-child(3)::before{content:"庫存";}
+  .annTable td:nth-child(4)::before{content:"備註";}
+  .annTable td:nth-child(5)::before{content:"操作";}
+
+  .annTable input,
+  .annTable button{
+    width:100%;
+  }
+
+  #textAnnAddBtn,
+  #textAnnClose,
+  #annAddBtn{
+    width:100%;
+    margin-top:6px;
+  }
+
+  .box .table-wrap{ overflow-x:hidden; }
+}
 </style>
+
 </head>
 
 <body>
