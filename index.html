@@ -146,177 +146,106 @@ tr:nth-child(even) td{background:#f3f4f6}
 }
 .small{font-size:13px;color:#6b7280}
 
-/* =========================
-   手機最終修正：隱藏重複欄位標題，顯示真正內容
-   ========================= */
+/* =================================================
+   手機版：公告明細（穩定最終版）
+   ================================================= */
 @media (max-width:520px){
 
-  /* 1️⃣ 完全隱藏原本表頭文字 */
+  /* Modal */
+  .modal{ padding:8px; }
+  .box{
+    width:100%;
+    max-height:92vh;
+    padding:10px;
+    border-radius:14px;
+  }
+
+  /* 表格 → 卡片 */
+  .annTable,
+  .annTable thead,
+  .annTable tbody,
+  .annTable tr,
+  .annTable th,
+  .annTable td{
+    display:block;
+    width:100%;
+  }
+
   .annTable thead,
   .annTable th{
     display:none !important;
   }
 
-  /* 2️⃣ 隱藏 td 裡原本的欄位名稱文字（序號/內容/庫存/備註/操作） */
-  .annTable td{
-    font-size:13px;
-    color:#111827;
-  }
-
-  /* 3️⃣ 第一欄（序號）縮小，不要搶版面 */
-  .annTable td:nth-child(1){
-    font-size:12px;
-    color:#6b7280;
-  }
-
-  /* 4️⃣ 內容（藥代 / 公告文字）一定要顯示 */
-  .annTable td:nth-child(2),
-  .annTable td:nth-child(2) input{
-    font-size:14px;
-    font-weight:900;
-    white-space:normal;
-    word-break:break-word;
-  }
-
-  /* 5️⃣ iOS Safari input 顯示完整文字 */
-  .annTable td:nth-child(2) input{
-    height:auto;
-    min-height:36px;
-    overflow:visible;
-  }
-}
-
-  /* iOS Safari 特別需要 */
-  .annTable input{
-    -webkit-text-size-adjust: 100%;
-  }
-}
-
-  /* 藥代 + 藥品（最重要，給最多空間） */
-  .annTable th:nth-child(2),
-  .annTable td:nth-child(2){
-    width:52%;
-    white-space:normal;
-    word-break:break-word;
-  }
-
-  /* 用量 */
-  .annTable th:nth-child(3),
-  .annTable td:nth-child(3){
-    width:14%;
-    text-align:center;
-  }
-
-  /* 備註（或狀態） */
-  .annTable th:nth-child(4),
-  .annTable td:nth-child(4){
-    width:22%;
-  }
-
-  /* 操作欄（極小） */
-  .annTable th:nth-child(5),
-  .annTable td:nth-child(5){
-    width:12%;
-    text-align:center;
-  }
-
-  /* 序號壓到最小 */
-  .annTable th:nth-child(1),
-  .annTable td:nth-child(1){
-    width:24px;
-    text-align:center;
-    font-size:12px;
-  }
-
-  /* 按鈕縮小，避免撐高列 */
-  .annTable button{
-    padding:4px 6px;
-    font-size:12px;
-    border-radius:8px;
-  }
-}
-
-
-  .annTable thead{display:none;}
-
   .annTable tr{
     background:#fff;
-    border-radius:14px;
-    padding:12px;
-    margin:10px 0;
-    box-shadow:0 6px 14px rgba(0,0,0,.06);
+    border-radius:12px;
+    padding:10px;
+    margin-bottom:10px;
+    box-shadow:0 4px 12px rgba(0,0,0,.08);
   }
 
   .annTable td{
+    margin-bottom:6px;
     padding:0;
-    margin:0 0 10px;
+    font-size:13px;
+    color:#111827;
     white-space:normal;
     word-break:break-word;
   }
+  .annTable td:last-child{ margin-bottom:0; }
 
-  .annTable td:last-child{margin-bottom:0;}
-
+  /* 欄位標籤 */
   .annTable td::before{
     display:block;
-    font-size:12px;
+    font-size:11px;
     font-weight:900;
     color:#6b7280;
-    margin-bottom:4px;
+    margin-bottom:2px;
   }
-
   .annTable td:nth-child(1)::before{content:"序號";}
   .annTable td:nth-child(2)::before{content:"內容";}
   .annTable td:nth-child(3)::before{content:"庫存";}
   .annTable td:nth-child(4)::before{content:"備註";}
   .annTable td:nth-child(5)::before{content:"操作";}
-}
 
-  .mainTable thead{display:none}
-
-  .mainTable tr{
-    background:#fff;
-    border-radius:14px;
-    padding:12px;
-    margin:10px 0;
-    box-shadow:0 6px 14px rgba(0,0,0,.06)
-  }
-
-  .mainTable td{
-    padding:0;
-    margin:0 0 10px;
-    white-space:normal;
-    word-break:break-word
-  }
-  .mainTable td:last-child{margin-bottom:0}
-
-  .mainTable td::before{
-    display:block;
-    font-weight:900;
-    color:#6b7280;
-    font-size:12px;
-    margin-bottom:4px
-  }
-  .mainTable td:nth-child(1)::before{content:"藥代"}
-  .mainTable td:nth-child(2)::before{content:"藥品"}
-  .mainTable td:nth-child(3)::before{content:"用量"}
-  .mainTable td:nth-child(4)::before{content:"庫存 / 公告"}
-}
-
-@media (max-width:520px){
-  .annTable td:nth-child(1){
-    display:block;
-  }
-}
-
-
-  /* 避免內容被 ::before 擠掉 */
-  .annTable td:nth-child(1)::after{
-    content: attr(data-value);
-    display:block;
+  /* 內容（藥代 / 公告文字） */
+  .annTable td:nth-child(2),
+  .annTable td:nth-child(2) input{
     font-size:14px;
-    margin-top:2px;
+    font-weight:900;
+  }
+
+  /* iOS input 修正 */
+  .annTable input{
+    width:100%;
+    font-size:13px;
+    padding:6px 8px;
+    border-radius:10px;
+    height:auto;
+    min-height:34px;
+    overflow:visible;
+    -webkit-text-size-adjust:100%;
+  }
+
+  /* 操作按鈕：小顆同一排 */
+  .annTable td:nth-child(5){
+    display:flex;
+    gap:6px;
+  }
+  .annTable td:nth-child(5) button{
+    width:auto;
+    padding:6px 10px;
+    font-size:12px;
+    border-radius:999px;
+    white-space:nowrap;
+  }
+
+  /* 防止左右滑 */
+  .box .table-wrap{
+    overflow-x:hidden;
   }
 }
+
 
 
 </style>
