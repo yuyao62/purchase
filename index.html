@@ -146,20 +146,51 @@ tr:nth-child(even) td{background:#f3f4f6}
 }
 .small{font-size:13px;color:#6b7280}
 
-/* ===== 手機主表直向 ===== */
+/* ===== 公告表 annTable 手機直向 ===== */
 @media(max-width:520px){
-  .app{margin:0;border-radius:0;box-shadow:none}
-  .table-wrap{overflow-x:visible}
-
-  .mainTable,
-  .mainTable thead,
-  .mainTable tbody,
-  .mainTable tr,
-  .mainTable th,
-  .mainTable td{
+  .annTable,
+  .annTable thead,
+  .annTable tbody,
+  .annTable tr,
+  .annTable th,
+  .annTable td{
     display:block;
-    width:100%
+    width:100%;
   }
+
+  .annTable thead{display:none;}
+
+  .annTable tr{
+    background:#fff;
+    border-radius:14px;
+    padding:12px;
+    margin:10px 0;
+    box-shadow:0 6px 14px rgba(0,0,0,.06);
+  }
+
+  .annTable td{
+    padding:0;
+    margin:0 0 10px;
+    white-space:normal;
+    word-break:break-word;
+  }
+
+  .annTable td:last-child{margin-bottom:0;}
+
+  .annTable td::before{
+    display:block;
+    font-size:12px;
+    font-weight:900;
+    color:#6b7280;
+    margin-bottom:4px;
+  }
+
+  .annTable td:nth-child(1)::before{content:"序號";}
+  .annTable td:nth-child(2)::before{content:"內容";}
+  .annTable td:nth-child(3)::before{content:"庫存";}
+  .annTable td:nth-child(4)::before{content:"備註";}
+  .annTable td:nth-child(5)::before{content:"操作";}
+}
 
   .mainTable thead{display:none}
 
