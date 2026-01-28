@@ -167,7 +167,15 @@ tr:nth-child(even) td{background:#f3f4f6}
   }
 }
 
-
+/* =========================
+   手機：徹底隱藏公告表頭（避免直排）
+   ========================= */
+@media (max-width:520px){
+  .annTable thead,
+  .annTable th{
+    display:none !important;
+  }
+}
 </style>
 
 </head>
