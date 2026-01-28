@@ -146,17 +146,72 @@ tr:nth-child(even) td{background:#f3f4f6}
 }
 .small{font-size:13px;color:#6b7280}
 
-/* ===== 公告表 annTable 手機直向 ===== */
-@media(max-width:520px){
-  .annTable,
-  .annTable thead,
-  .annTable tbody,
-  .annTable tr,
+/* ===== 公告表 iPhone：一藥一行（截圖用） ===== */
+@media (max-width:520px){
+
+  .table-wrap{
+    overflow-x:hidden;
+  }
+
+  .annTable{
+    width:100%;
+    table-layout:fixed;
+  }
+
   .annTable th,
   .annTable td{
-    display:block;
-    width:100%;
+    padding:4px 6px;
+    font-size:13px;
+    line-height:1.25;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
   }
+
+  /* 藥代 + 藥品（最重要，給最多空間） */
+  .annTable th:nth-child(2),
+  .annTable td:nth-child(2){
+    width:52%;
+    white-space:normal;
+    word-break:break-word;
+  }
+
+  /* 用量 */
+  .annTable th:nth-child(3),
+  .annTable td:nth-child(3){
+    width:14%;
+    text-align:center;
+  }
+
+  /* 備註（或狀態） */
+  .annTable th:nth-child(4),
+  .annTable td:nth-child(4){
+    width:22%;
+  }
+
+  /* 操作欄（極小） */
+  .annTable th:nth-child(5),
+  .annTable td:nth-child(5){
+    width:12%;
+    text-align:center;
+  }
+
+  /* 序號壓到最小 */
+  .annTable th:nth-child(1),
+  .annTable td:nth-child(1){
+    width:24px;
+    text-align:center;
+    font-size:12px;
+  }
+
+  /* 按鈕縮小，避免撐高列 */
+  .annTable button{
+    padding:4px 6px;
+    font-size:12px;
+    border-radius:8px;
+  }
+}
+
 
   .annTable thead{display:none;}
 
