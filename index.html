@@ -572,17 +572,27 @@ tr:nth-child(even) td{background:#f3f4f6}
     return "\ufeff" + [headLine, ...lines].join("\r\n"); // BOM + CRLF
   }
 
-  function downloadTextFile(filename, text, mime="text/csv;charset=utf-8"){
-    const blob = new Blob([text], {type: mime});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url), 5000);
+function downloadTextFile(filename, text, mime="text/csv;charset=utf-8"){
+  const blob = new Blob([text], { type: mime });
+  const url = URL.createObjectURL(blob);
+
+  // iOS Safari：用新分頁打開
+  if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+    window.open(url, "_blank");
+    setTimeout(()=>URL.revokeObjectURL(url), 8000);
+    return;
   }
+
+  // 其他瀏覽器：正常下載
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 5000);
+}
+
 
   // =========================
   // ✅ inventory_index.json
